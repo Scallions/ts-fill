@@ -10,6 +10,10 @@
         {
             "name": "feature/gap_size_plot",
             "base": "develop"
+        },
+        {
+            "name": "feature/gap_plot",
+            "base": "develop"
         }
     ],
 }
