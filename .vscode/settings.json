@@ -1,0 +1,8 @@
+{
+    "python.pythonPath": "/Users/scallions/opt/miniconda3/envs/gps/bin/python",
+    "todo.embedded.exclude": [
+        "**/data/**",
+        "**/.git/**"
+    ],
+    "python.testing.pytestEnabled": true,
+}
