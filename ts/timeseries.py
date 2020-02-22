@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-22 12:38:00
+@LastEditTime : 2020-02-22 22:16:52
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -12,6 +12,12 @@ import matplotlib.pyplot as plt
 import ts.data as data
 
 
+class GapStatus:
+    def __init__(self):
+        super().__init__()
+        self.starts = []
+        self.lengths = []
+
 class TimeSeries(pd.DataFrame):
     """
     基类，规定一些接口
@@ -20,7 +26,7 @@ class TimeSeries(pd.DataFrame):
     def plot_gap(self):
         """plot gap
         """
-        gap_sizes = self.gap_status()
+        gap_sizes = self.gap_status().lengths
         plt.hist(gap_sizes, bins=20)
         plt.show()
         
@@ -52,19 +58,21 @@ class SingleTs(TimeSeries):
         Returns:
             List[Gap]: gap size of ts 
         """
-        lengths = []
         indexs = self.index.to_julian_date()
         start = indexs[0]
+        gaps = GapStatus()
         for i in range(1,len(indexs)):
             if indexs[i] - indexs[i-1] == 1:
                 pass 
             else:
                 len_1 = indexs[i-1] - start + 1
                 len_2 = indexs[i] - indexs[i-1] - 1
-                lengths.append(int(len_1))
-                lengths.append(int(-1*len_2))
+                gaps.starts.append(indexs[i-1])
+                gaps.lengths.append(int(len_1))
+                gaps.starts.append(indexs[i])
+                gaps.lengths.append(-1*int(len_2))
                 start = indexs[i]
-        return lengths
+        return gaps
 
 class MulTs:
     pass
