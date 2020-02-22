@@ -2,11 +2,12 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-09 21:21:41
-@FilePath     : /gps-ts/ts/ts.py
+@LastEditTime : 2020-02-22 12:09:40
+@FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
 import pandas as pd
+import matplotlib.pyplot as plt
 
 import ts.data as data
 
@@ -15,6 +16,15 @@ class TimeSeries(pd.DataFrame):
     """
     基类，规定一些接口
     """
+
+    def plot_gap(self):
+        """plot gap
+        """
+        if not hasattr(self, "gap_size"):
+            self.gap_status()
+        plt.hist(self.gap_sizes)
+        plt.show()
+        
 
 class SingleTs(TimeSeries):    
     def __init__(self, filepath):
@@ -37,32 +47,25 @@ class SingleTs(TimeSeries):
         self.sort_index(inplace=True)
 
 
-    def gap_status(self) -> List[Gap]:
-        """get status of ts
+    def gap_status(self):
+        """get status of ts no compelte
         
         Returns:
             List[Gap]: gap size of ts 
         """
         lengths = []
-        start = -1
-        start_ = self.index[0]
-        for i in self.index:
-            if self[i] == None and start_ != -1:
-                lengths.append({
-                    "len": i - start_,
-                    "start": start_,
-                    "end": i - 1
-                })
-                start_ = -1
-                start = i 
-            if self[i] != None and start != -1:
-                lengths.append({
-                    "len": i - start,
-                    "start": start,
-                    "end": i - 1
-                })
-                start = -1
-                start_ = i
+        indexs = self.index.to_julian_date()
+        start = indexs[0]
+        for i in range(1,len(indexs)):
+            if indexs[i] - indexs[i-1] == 1:
+                pass 
+            else:
+                len_1 = indexs[i-1] - start + 1
+                len_2 = indexs[i] - indexs[i-1] - 1
+                lengths.append(int(len_1))
+                lengths.append(int(-1*len_2))
+                start = indexs[i]
+        self.gap_sizes = lengths
         return lengths
 
 class MulTs:

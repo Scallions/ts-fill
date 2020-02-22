@@ -1,14 +1,14 @@
 '''
 @Author: your name
 @Date: 2020-02-05 14:26:13
-@LastEditTime : 2020-02-09 19:53:44
+@LastEditTime : 2020-02-22 12:02:47
 @LastEditors  : Scallions
 @Description: In User Settings Edit
-@FilePath: /gps-ts/main.py
+@FilePath     : /gps-ts/main.py
 '''
 from loguru import logger
 from ts.data import cwu_loader
-from ts.ts import SingleTs as Sts
+from ts.timeseries import SingleTs as Sts
 import ts.fill as fill
 
 if __name__ == "__main__":
