@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-09 19:39:40
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-22 12:33:42
+@LastEditTime : 2020-02-22 12:40:06
 @FilePath     : /gps-ts/scripts/analysis_ts.py
 @Description  : Analysis gap size of gps time series
 '''
@@ -15,7 +15,7 @@ from loguru import logger
 import matplotlib.pyplot as plt
 
 import ts.data as data
-from ts.ts import SingleTs as Sts
+from ts.timeseries import SingleTs as Sts
 
 
 
@@ -49,6 +49,7 @@ if __name__ == "__main__":
     tss = load_data()
     lengths = list(map(lambda x: x.gap_status(), tss))
     gap_sizes = []
-    map(lambda lens: gap_sizes + lens, lengths)
-    plt.hist(gap_sizes)
+    for lens in lengths:
+        gap_sizes += lens
+    plt.hist(gap_sizes,bins=100)
     plt.show()
