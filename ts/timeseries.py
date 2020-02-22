@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-22 12:22:18
+@LastEditTime : 2020-02-22 12:27:55
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -20,10 +20,8 @@ class TimeSeries(pd.DataFrame):
     def plot_gap(self):
         """plot gap
         """
-        if not hasattr(self, "gap_size"):
-            print("init gap size")
-            self.gap_status()
-        plt.hist(self.gap_sizes, bins=20)
+        gap_sizes = self.gap_status()
+        plt.hist(gap_sizes, bins=20)
         plt.show()
         
 
@@ -66,7 +64,6 @@ class SingleTs(TimeSeries):
                 lengths.append(int(len_1))
                 lengths.append(int(-1*len_2))
                 start = indexs[i]
-        self.gap_sizes = lengths
         return lengths
 
 class MulTs:
