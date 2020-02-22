@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-22 12:18:34
+@LastEditTime : 2020-02-22 12:23:59
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -21,8 +21,9 @@ class TimeSeries(pd.DataFrame):
         """plot gap
         """
         if not hasattr(self, "gap_size"):
+            print("init gap size")
             self.gap_status()
-        plt.hist(self.gap_sizes)
+        plt.hist(self.gap_sizes, bins=20)
         plt.show()
         
 
