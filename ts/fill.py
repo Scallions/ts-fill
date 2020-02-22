@@ -1,13 +1,14 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-02-22 10:39:35
+@LastEditTime : 2020-02-22 22:00:00
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
 '''
 from fbprophet import Prophet
 from loguru import logger
+import matplotlib.pyplot as plt
 
 
 class Filler:
@@ -28,3 +29,7 @@ class FbFiller(Filler):
         fig1.savefig("./fig/forecast.png")
         fig2 = m.plot_components(forecast)
         fig2.savefig("./fig/components.png")
+        plt.close("all")
+        fts = forecast["yhat"][:-365]
+        fts.index = ts.index 
+        return fts
