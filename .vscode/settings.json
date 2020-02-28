@@ -22,6 +22,10 @@
         {
             "name": "feature/gap_status",
             "base": "develop"
+        },
+        {
+            "name": "feature/ssa_filler",
+            "base": "develop"
         }
     ],
 }
