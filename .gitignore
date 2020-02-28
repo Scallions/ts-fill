@@ -155,3 +155,5 @@ data/*
 !data/.gitkeep
 
 tempCodeRunnerFile.py
+
+.idea/*
