@@ -1,2 +1,6 @@
-☐ make train set
-✔ make a comparent between different gap size @done(20-02-29 22:04)
+features:
+    ☐ make train set
+    ✔ make a comparent between different gap size @done(20-02-29 22:04)
+
+tests:
+    [] test for make gap size @high @scallions

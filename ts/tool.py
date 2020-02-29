@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-29 21:54:42
+@LastEditTime : 2020-02-29 22:43:37
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -58,7 +58,7 @@ def make_gap(ts, gap_size=3):
         ts (timeseries): ts without gap
         gap_size (int, optional): gap size will in the ts. Defaults to 3.
     """
-    # TODO: how to make gap not neighbor @scallions
+    # TODO: make gap not neighbor @scallions
     length = len(ts)
     gap_count = int(length * 0.2) # 20% gap
     gap_index = []
