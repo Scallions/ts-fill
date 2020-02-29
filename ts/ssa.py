@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-22 10:40:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-22 10:40:18
+@LastEditTime : 2020-02-29 21:38:41
 @FilePath     : /gps-ts/ts/ssa.py
 @Description  : 
 '''
@@ -10,7 +10,7 @@
 import numpy as np 
 from numpy.linalg import eig
 import matplotlib.pyplot as plt
-import TS.tool as tool
+import ts.tool as tool
 from loguru import logger
 
 
