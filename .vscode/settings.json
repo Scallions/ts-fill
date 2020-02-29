@@ -26,10 +26,6 @@
         {
             "name": "feature/ssa_filler",
             "base": "develop"
-        },
-        {
-            "name": "feature/gapsize_compare",
-            "base": "develop"
         }
     ],
 }
