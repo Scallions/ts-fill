@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-29 21:39:27
+@LastEditTime : 2020-02-29 21:54:42
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from PyAstronomy import pyasl
+import random
 
 
 def dy2jd(dy):
@@ -57,9 +58,23 @@ def make_gap(ts, gap_size=3):
         ts (timeseries): ts without gap
         gap_size (int, optional): gap size will in the ts. Defaults to 3.
     """
+    # TODO: how to make gap not neighbor @scallions
     length = len(ts)
     gap_count = int(length * 0.2) # 20% gap
-    batch_count = length // gap_size
+    gap_index = []
+    while len(gap_index) < gap_count:
+        r_index = random.randint(0,length-gap_size)
+        flag = False
+        for gap in gap_index:
+            if abs(gap - r_index) <= gap_size:
+                flag = True
+                break
+        if flag:
+            break
+        gap_index.append(r_index)
+    tsc = ts.copy()
+    tsc[gap_index] = None
+    return tsc
 
 def get_status_between(ts1, ts2):
     """description for delta between ts1 and ts2
