@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 12:58:11
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-22 12:07:11
+@LastEditTime : 2020-03-03 20:15:22
 @FilePath     : /gps-ts/ts/data.py
 @Description  : some func used to process time series
 
@@ -10,9 +10,13 @@ ts data is a dataframe contained columns such as [time:Datatime,jd:Float,N:Float
 '''
 import pandas as pd
 from loguru import logger
-
+from enum import Enum
 import ts.tool as tool
 
+class FileType(Enum):
+    Cwu     = 1
+    Sopac   = 2
+    Raw     = 3
 
 def cwu_loader(filepath):
     """load data from cwu csv file

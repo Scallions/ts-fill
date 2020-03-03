@@ -1,6 +1,7 @@
 features:
     ☐ make train set
     ✔ make a comparent between different gap size @done(20-02-29 22:04)
+    ✔ return longest sub ts @done(20-03-03 21:13)
 
 tests:
-    [] test for make gap size @high @scallions
+    ✔ test for make gap size @high @scallions @done(20-03-03 21:13)

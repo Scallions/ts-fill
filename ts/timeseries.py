@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-22 22:16:52
+@LastEditTime : 2020-03-03 20:46:43
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -10,6 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import ts.data as data
+import ts.tool as tool
 
 
 class GapStatus:
@@ -32,11 +33,24 @@ class TimeSeries(pd.DataFrame):
         
 
 class SingleTs(TimeSeries):    
-    def __init__(self, filepath):
-        ts = data.cwu_loader(filepath)
-        _data = ts.iloc[:,1].to_numpy()
-        index = ts.index
-        columns = ['x']
+    def __init__(self, filepath="", filetype=data.FileType.Raw, datas=None, indexs=None):
+        # load cwu
+        if filepath != "" and filetype == data.FileType.Cwu:
+            ts = data.cwu_loader(filepath)
+            _data = ts.iloc[:,1].to_numpy()
+            index = ts.index
+            columns = ['x']
+        # load sopac
+        if filepath != "" and filetype == data.FileType.Sopac:
+            ts = data.sopac_loader(filepath)
+            _data = ts.iloc[:,1].to_numpy()
+            index = ts.index
+            columns = ['x']
+        # load custom data
+        if filetype == data.FileType.Raw and not datas and not indexs:
+            _data = datas
+            index = indexs
+            columns = ['x']
         super().__init__(data=_data, index=index, columns=columns)
 
     def complete(self):
@@ -67,9 +81,9 @@ class SingleTs(TimeSeries):
             else:
                 len_1 = indexs[i-1] - start + 1
                 len_2 = indexs[i] - indexs[i-1] - 1
-                gaps.starts.append(indexs[i-1])
+                gaps.starts.append(tool.jd2datetime(start))
                 gaps.lengths.append(int(len_1))
-                gaps.starts.append(indexs[i])
+                gaps.starts.append(tool.jd2datetime(indexs[i-1] + 1))
                 gaps.lengths.append(-1*int(len_2))
                 start = indexs[i]
         return gaps

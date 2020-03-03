@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-29 22:43:37
+@LastEditTime : 2020-03-03 21:09:29
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -11,6 +11,7 @@ from __future__ import division, print_function
 import datetime as dt
 
 import numpy as np
+import julian
 import pandas as pd
 from loguru import logger
 from PyAstronomy import pyasl
@@ -29,6 +30,9 @@ def dy2jd(dy):
     gd = pyasl.decimalYearGregorianDate(dy, "tuple")
     ddt = dt.datetime(*gd)
     return round(pyasl.jdcnv(ddt))
+
+def jd2datetime(jd):
+    return pd.Timestamp(julian.from_jd(jd, fmt='jd'))
             
 def count_tss(tss):
     """Count ts and days in tss
@@ -73,7 +77,9 @@ def make_gap(ts, gap_size=3):
             break
         gap_index.append(r_index)
     tsc = ts.copy()
-    tsc[gap_index] = None
+
+    for ind in gap_index:
+        tsc.loc[tsc.index[ind]] = None
     return tsc
 
 def get_status_between(ts1, ts2):
@@ -85,3 +91,14 @@ def get_status_between(ts1, ts2):
     """
     delta = pd.Series(np.abs(ts1 - ts2))
     return delta
+
+
+def get_longest(ts):
+    """get a longest sub ts in ts without gap
+    
+    Args:
+        ts (ts): ts with gap
+    """
+    gap_size = ts.gap_status()
+    max_i = gap_size.lengths.index(max(gap_size.lengths))
+    return ts.loc[gap_size.starts[max_i]:gap_size.starts[max_i]+pd.Timedelta(days=gap_size.lengths[max_i]-1)]
