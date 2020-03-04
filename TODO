@@ -2,6 +2,8 @@ features:
     ☐ make train set
     ✔ make a comparent between different gap size @done(20-02-29 22:04)
     ✔ return longest sub ts @done(20-03-03 21:13)
+    ✔ make all continue ts @started(20-03-04 21:05) @done(20-03-04 21:08) @lasted(3m11s)
+    ☐ rnn fill gap
 
 tests:
     ✔ test for make gap size @high @scallions @done(20-03-03 21:13)

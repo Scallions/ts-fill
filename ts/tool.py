@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-03 21:09:29
+@LastEditTime : 2020-03-04 21:00:12
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -79,7 +79,9 @@ def make_gap(ts, gap_size=3):
     tsc = ts.copy()
 
     for ind in gap_index:
-        tsc.loc[tsc.index[ind]] = None
+        for i in range(gap_size):
+            g_ind = tsc.index[ind] + pd.Timedelta(days=i)
+            tsc.loc[g_ind] = None
     return tsc
 
 def get_status_between(ts1, ts2):
@@ -102,3 +104,17 @@ def get_longest(ts):
     gap_size = ts.gap_status()
     max_i = gap_size.lengths.index(max(gap_size.lengths))
     return ts.loc[gap_size.starts[max_i]:gap_size.starts[max_i]+pd.Timedelta(days=gap_size.lengths[max_i]-1)]
+
+
+def get_all_cts(ts):
+    """get all continue sub ts in ts
+    
+    Args:
+        ts (ts): ts with gap
+    """
+    gap_size = ts.gap_status()
+    sub_ts = []
+    for i, length in enumerate(gap_size.lengths):
+        if length < 0: continue
+        sub_ts.append(ts.loc[gap_size.starts[i]:gap_size.starts[i]+pd.Timedelta(days=length-1)])
+    return sub_ts
