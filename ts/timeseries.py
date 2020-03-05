@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-03 20:46:43
+@LastEditTime : 2020-03-05 16:58:19
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -33,7 +33,7 @@ class TimeSeries(pd.DataFrame):
         
 
 class SingleTs(TimeSeries):    
-    def __init__(self, filepath="", filetype=data.FileType.Raw, datas=None, indexs=None):
+    def __init__(self, filepath="", filetype=data.FileType.Df, datas=None):
         # load cwu
         if filepath != "" and filetype == data.FileType.Cwu:
             ts = data.cwu_loader(filepath)
@@ -47,9 +47,9 @@ class SingleTs(TimeSeries):
             index = ts.index
             columns = ['x']
         # load custom data
-        if filetype == data.FileType.Raw and not datas and not indexs:
-            _data = datas
-            index = indexs
+        if filetype == data.FileType.Df:
+            _data = datas.x
+            index = datas.index
             columns = ['x']
         super().__init__(data=_data, index=index, columns=columns)
 
@@ -64,6 +64,19 @@ class SingleTs(TimeSeries):
             if not index in self.index:
                 self.loc[index] = None
         self.sort_index(inplace=True)
+        return SingleTs(datas=self.copy())
+
+    def get_longest(self):
+        """sub ts longest
+        """
+        tsl = tool.get_longest(self)
+        return SingleTs(datas = tsl)
+    
+    def make_gap(self,gapsize):
+        """make gap in ts
+        """
+        tsg = tool.make_gap(self,gapsize)
+        return SingleTs(datas = tsg)
 
 
     def gap_status(self):

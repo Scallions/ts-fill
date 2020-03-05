@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-04 21:00:12
+@LastEditTime : 2020-03-05 16:53:11
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -103,7 +103,9 @@ def get_longest(ts):
     """
     gap_size = ts.gap_status()
     max_i = gap_size.lengths.index(max(gap_size.lengths))
-    return ts.loc[gap_size.starts[max_i]:gap_size.starts[max_i]+pd.Timedelta(days=gap_size.lengths[max_i]-1)]
+    tsl = ts.loc[gap_size.starts[max_i]:gap_size.starts[max_i]+pd.Timedelta(days=gap_size.lengths[max_i]-1)]
+    return tsl
+
 
 
 def get_all_cts(ts):

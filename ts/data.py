@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 12:58:11
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-03 20:15:22
+@LastEditTime : 2020-03-05 16:36:36
 @FilePath     : /gps-ts/ts/data.py
 @Description  : some func used to process time series
 
@@ -16,7 +16,7 @@ import ts.tool as tool
 class FileType(Enum):
     Cwu     = 1
     Sopac   = 2
-    Raw     = 3
+    Df      = 3
 
 def cwu_loader(filepath):
     """load data from cwu csv file
