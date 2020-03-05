@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-05 17:22:06
+@LastEditTime : 2020-03-05 17:38:41
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -55,7 +55,7 @@ def delta(X, X_):
     """
     return np.mean(np.square(X - X_))
 
-def make_gap(ts, gap_size=3):
+def make_gap(ts, gap_size=3, per = 0.2):
     """make gap in ts return copy
     
     Args:
@@ -64,7 +64,7 @@ def make_gap(ts, gap_size=3):
     """
     # TODO: make gap not neighbor @scallions
     length = len(ts)
-    gap_count = int(length * 0.2) # 20% gap
+    gap_count = int(length * per) # 20% gap
     gap_index = []
     while len(gap_index) < gap_count:
         r_index = random.randint(0,length-gap_size)

@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-05 17:35:49
+@LastEditTime : 2020-03-05 17:38:29
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -77,10 +77,10 @@ class SingleTs(TimeSeries):
         tsl = tool.get_longest(self)
         return SingleTs(datas = tsl)
     
-    def make_gap(self,gapsize):
+    def make_gap(self,gapsize, per = 0.2):
         """make gap in ts
         """
-        tsg = tool.make_gap(self,gapsize)
+        tsg = tool.make_gap(self,gapsize, per)
         return SingleTs(datas = tsg)
 
 

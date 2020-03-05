@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-02-05 14:26:13
-@LastEditTime : 2020-03-05 17:36:07
+@LastEditTime : 2020-03-05 17:37:40
 @LastEditors  : Scallions
 @Description: In User Settings Edit
 @FilePath     : /gps-ts/main.py
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     ts = Sts(filepath,filetype=FileType.Cwu)
     tsl = ts.get_longest()
     # tsl.plot()
-    tsg = tsl.make_gap(20)
+    tsg = tsl.make_gap(20,0.3)
     tsc = fill.SSAFiller.fill(tsg)
     tsc.plot()
     tsg.plot()
