@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-22 10:40:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-29 21:44:34
+@LastEditTime : 2020-03-05 17:14:29
 @FilePath     : /gps-ts/ts/ssa.py
 @Description  : 
 '''
@@ -70,7 +70,7 @@ def iter_SSA_inner(X, sigma, K, M):
     return:
         _::Ts
     """
-    #X = X.to_numpy(copy=True)
+    X = X.to_numpy(copy=True)[:,0]
     print(K)
     X_m = X[~np.isnan(X)].mean() # 获取平均值
     Xt = X.copy()

@@ -2,11 +2,12 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-05 16:58:19
+@LastEditTime : 2020-03-05 17:35:49
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 import ts.data as data
@@ -33,7 +34,7 @@ class TimeSeries(pd.DataFrame):
         
 
 class SingleTs(TimeSeries):    
-    def __init__(self, filepath="", filetype=data.FileType.Df, datas=None):
+    def __init__(self, filepath="", filetype=data.FileType.Df, datas=None, indexs = None):
         # load cwu
         if filepath != "" and filetype == data.FileType.Cwu:
             ts = data.cwu_loader(filepath)
@@ -47,9 +48,13 @@ class SingleTs(TimeSeries):
             index = ts.index
             columns = ['x']
         # load custom data
-        if filetype == data.FileType.Df:
+        if filetype == data.FileType.Df and not isinstance(datas, np.ndarray):
             _data = datas.x
             index = datas.index
+            columns = ['x']
+        if filetype == data.FileType.Df and isinstance(datas, np.ndarray):
+            _data = datas
+            index = indexs 
             columns = ['x']
         super().__init__(data=_data, index=index, columns=columns)
 
