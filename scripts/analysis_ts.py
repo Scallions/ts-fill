@@ -1,8 +1,8 @@
 '''
 @Author       : Scallions
 @Date         : 2020-02-09 19:39:40
-@LastEditors: Please set LastEditors
-@LastEditTime: 2020-02-28 17:11:12
+@LastEditors  : Scallions
+@LastEditTime : 2020-03-09 21:10:28
 @FilePath     : /gps-ts/scripts/analysis_ts.py
 @Description  : Analysis gap size of gps time series
 '''
@@ -30,7 +30,7 @@ def load_data():
     files = os.listdir("./data")
     for file_ in files:
         if ".cwu.igs14.csv" in file_:
-            tss.append(Sts("./data/" + file_))
+            tss.append(Sts("./data/" + file_,data.FileType.Cwu))
     return tss
 
 def get_lens(tss):
@@ -46,11 +46,18 @@ def get_lens(tss):
 
 
 if __name__ == "__main__":
+    """plot gap size distrbution
+    """
+    # load data
     tss = load_data()
+    
+
     lengths = list(map(lambda x: x.gap_status().lengths, tss))
     gap_sizes = []
     for lens in lengths:
         gap_sizes += lens
+
+    # 统计gap大小信息
     from collections import Counter
     strick_sizes = [gap for gap in gap_sizes if gap > 0] # 连续观测
     gap_sizes = [gap for gap in gap_sizes if gap < 0 and gap > -365] # 缺失观测 0 - 365
@@ -66,4 +73,8 @@ if __name__ == "__main__":
     plt.ylim(0,50)
     plt.subplot(1,2,2)
     plt.plot(sorted(result.keys(), reverse=True), gap_sum)
+    plt.show()
+
+    con_res = Counter(strick_sizes)
+    plt.bar(con_res.keys(), con_res.values())    
     plt.show()

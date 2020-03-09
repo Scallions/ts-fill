@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-28 19:50:25
 @LastEditors  : Scallions
-@LastEditTime : 2020-02-29 21:43:27
+@LastEditTime : 2020-03-09 21:01:33
 @FilePath     : /gps-ts/scripts/compare-gapsize.py
 @Description  : gap size compare
 '''
@@ -26,7 +26,7 @@ def load_data():
     files = os.listdir("./data")
     for file_ in files:
         if ".cwu.igs14.csv" in file_:
-            tss.append(Sts("./data/" + file_))
+            tss.append(Sts("./data/" + file_,data.FileType.Cwu))
     return tss
 
 
