@@ -158,3 +158,6 @@ tempCodeRunnerFile.py
 
 .idea/*
 .VSCodeCounter
+
+# models
+models/*

@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-09 20:54:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-09 22:07:29
+@LastEditTime : 2020-03-10 17:15:32
 @FilePath     : /gps-ts/scripts/train.py
 @Description  : 
 '''
@@ -76,6 +76,8 @@ def train(trainset, net, loss):
 
     epochs = 100
 
+    checkpoint = True
+
     for epoch in range(epochs):
         for i, data in enumerate(trainset):
             x,y = data
@@ -89,7 +91,13 @@ def train(trainset, net, loss):
             opt.step()
             if i % 99 == 0:
                 print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
-
+        if checkpoint:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': net.state_dict(),
+                'opt_state_dict' : opt.state_dict(),
+                'loss': l,
+            }, f"models/lstm/{epoch}-{l}.pth")                    
 
 if __name__ == "__main__":
     dataset = TsDataset()
@@ -98,3 +106,41 @@ if __name__ == "__main__":
     net = Net()
 
     train(train_loader,net,torch.nn.MSELoss())
+
+
+
+""" some snippets
+## state_dict 
+# save model
+torch.save(model.state_dict(), PATH)
+# load model
+model = Net() # model that u saved
+model.load_state_dict(torch.load(PATH))
+model.eval()
+
+## whole model
+# save
+torch.save(model, PATH)
+# load
+model = torch.load(PATH)
+model.eval()
+
+## checkpoint
+# save
+torch.save({
+    'epoch': epoch,
+    'model_state_dict': model.state_dict(),
+    'opt_state_dict' : opt.state_dict(),
+    'loss': loss,
+    ...
+}, PATH)
+# load
+model = Model()
+opt = Opt()
+checkpoint = torch.load(PATH)
+model.load_state_dict(checkpoint['model_state_dict'])
+opt.loader_state_dict(checkpoint['opt_state_dict'])
+epoch = checkpoint['epoch']
+loss = checkpoint['loss']
+model.eval()
+"""
