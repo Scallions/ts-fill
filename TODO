@@ -4,7 +4,8 @@ features:
     ✔ return longest sub ts @done(20-03-03 21:13)
     ✔ make all continue ts @started(20-03-04 21:05) @done(20-03-04 21:08) @lasted(3m11s)
     ☐ rnn fill gap
-        ☐ dataset @started(20-03-09 21:21)
+        ✔ dataset @started(20-03-09 21:21) @done(20-03-12 15:49) @lasted(2d18h28m27s)
+        ☐ fill function
     ☐ result compare
         ☐ add result file format
         ☐ compare different result file

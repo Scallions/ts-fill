@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-03-12 15:23:31
+@LastEditTime : 2020-03-12 15:48:49
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -11,6 +11,8 @@ from loguru import logger
 import matplotlib.pyplot as plt
 import ts.ssa as ssa 
 from ts.timeseries import SingleTs as STs
+import ts.rnnfill as rnn
+import pandas as pd
 
 
 class Filler:
@@ -140,3 +142,20 @@ class SplineFiller(Filler):
         tc = ts.x.fillna(tsc.x.interpolate(method='spline', order=order))
         tss = STs(datas = tc, indexs=tsc.index)
         return tss
+
+
+class LstmFiller(Filler):
+    @staticmethod
+    def fill(ts):
+        net = rnn.load_model(rnn.Net,'lstm')
+        tsc = ts.complete()
+        tsf = tsc.copy()
+        gap_index = tsc.isnull()
+        for gap in gap_index:
+            data = torch.zeros((1,30))
+            for i in range(30):
+                data_idx = gap-pd.Timedelta(days=(30-i))
+                data[0,i] = tsc.loc[data_idx]
+            out = net.predict(data).item()
+            tsf.loc[gap] = out
+        return STs(datas = tsf, indexs=tsc.index)
