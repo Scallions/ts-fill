@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-03-05 17:32:07
+@LastEditTime : 2020-03-12 15:23:31
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -50,79 +50,93 @@ class MeanFiller(Filler):
     def fill(ts):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.mean())
-        return tc 
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class MedianFiller(Filler):
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.median())
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class RollingMeanFiller(Filler):
     @staticmethod
     def fill(ts,steps=24):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.rolling(steps,min_periods=1,).mean())
-        return tc 
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class RollingMedianFiller(Filler):
     @staticmethod
     def fill(ts,steps=24):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.rolling(steps,min_periods=1,).median())
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class LinearFiller(Filler):
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.interpolate(method='linear'))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class TimeFiller(Filler):
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.interpolate(method='time'))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class QuadraticFiller(Filler):
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.interpolate(method='quadratic'))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class CubicFiller(Filler):
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.interpolate(method='cubic'))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class SLinearFiller(Filler):
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tc = tsc.x.fillna(tsc.x.interpolate(method='slinear'))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class AkimaFiller(Filler):
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.interpolate(method='akima'))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class PolyFiller(Filler):
     @staticmethod
-    def fill(ts, order):
+    def fill(ts, order=3):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.interpolate(method='polynomial', order=order))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss
 
 class SplineFiller(Filler):
     @staticmethod
-    def fill(ts, order):
+    def fill(ts, order=3):
         tsc = ts.complete()
         tc = ts.x.fillna(tsc.x.interpolate(method='spline', order=order))
-        return tc
+        tss = STs(datas = tc, indexs=tsc.index)
+        return tss

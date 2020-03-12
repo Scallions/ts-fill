@@ -5,6 +5,9 @@ features:
     ✔ make all continue ts @started(20-03-04 21:05) @done(20-03-04 21:08) @lasted(3m11s)
     ☐ rnn fill gap
         ☐ dataset @started(20-03-09 21:21)
+    ☐ result compare
+        ☐ add result file format
+        ☐ compare different result file
 
 tests:
     ✔ test for make gap size @high @scallions @done(20-03-03 21:13)

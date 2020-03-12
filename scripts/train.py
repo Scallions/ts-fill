@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-09 20:54:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-10 17:15:32
+@LastEditTime : 2020-03-10 17:20:46
 @FilePath     : /gps-ts/scripts/train.py
 @Description  : 
 '''
@@ -97,15 +97,17 @@ def train(trainset, net, loss):
                 'model_state_dict': net.state_dict(),
                 'opt_state_dict' : opt.state_dict(),
                 'loss': l,
-            }, f"models/lstm/{epoch}-{l}.pth")                    
+            }, f"models/lstm/{epoch}-{l}.tar")                    
 
 if __name__ == "__main__":
+    
     dataset = TsDataset()
     train_loader = torch.utils.data.DataLoader(dataset,batch_size=12)
 
-    net = Net()
-
-    train(train_loader,net,torch.nn.MSELoss())
+    nets = [Net]
+    for Net_ in nets:
+        net = Net_()
+        train(train_loader,net,torch.nn.MSELoss())
 
 
 

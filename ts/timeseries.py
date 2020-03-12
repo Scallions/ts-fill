@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-05 17:38:29
+@LastEditTime : 2020-03-12 15:37:24
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -48,11 +48,11 @@ class SingleTs(TimeSeries):
             index = ts.index
             columns = ['x']
         # load custom data
-        if filetype == data.FileType.Df and not isinstance(datas, np.ndarray):
+        if filetype == data.FileType.Df and (isinstance(datas, SingleTs) or isinstance(datas,pd.DataFrame)):
             _data = datas.x
             index = datas.index
             columns = ['x']
-        if filetype == data.FileType.Df and isinstance(datas, np.ndarray):
+        if filetype == data.FileType.Df and (isinstance(datas, np.ndarray) or isinstance(datas,pd.Series)):
             _data = datas
             index = indexs 
             columns = ['x']
@@ -77,11 +77,11 @@ class SingleTs(TimeSeries):
         tsl = tool.get_longest(self)
         return SingleTs(datas = tsl)
     
-    def make_gap(self,gapsize, per = 0.2):
+    def make_gap(self,gapsize=3, per = 0.2):
         """make gap in ts
         """
-        tsg = tool.make_gap(self,gapsize, per)
-        return SingleTs(datas = tsg)
+        tsg,gindex = tool.make_gap(self,gapsize, per)
+        return SingleTs(datas = tsg),gindex
 
 
     def gap_status(self):
@@ -108,3 +108,7 @@ class SingleTs(TimeSeries):
 
 class MulTs:
     pass
+
+
+def df2ts(df):
+    return SingleTs(datas=df)

@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:01:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-05 16:52:59
+@LastEditTime : 2020-03-12 14:42:55
 @FilePath     : /gps-ts/tests/test_tool.py
 @Description  : 
 '''
@@ -11,6 +11,7 @@ import ts.tool as tool
 import ts.timeseries as Ts
 import pandas as pd
 import ts.data as data
+import ts.fill as fill
 
 @pytest.fixture()
 def get_a_ts():
@@ -20,7 +21,7 @@ def get_a_ts():
 @pytest.fixture()
 def get_a_continue_ts(get_a_ts):
     ts = get_a_ts
-    return tool.get_longest(ts)
+    return ts.get_longest()
 
 def test_dy2jd():
     dy = 2020.123
@@ -66,3 +67,9 @@ def test_all_sub_ts(get_a_ts):
         index = sub_ts[j-1].index
         for k in range(length - 1):
             assert index[k+1] == index[k] + pd.Timedelta(days=1)
+
+def test_comparets(get_a_continue_ts):
+    ts = get_a_continue_ts
+    tsg, gdix = ts.make_gap()
+    tsc = fill.LinearFiller().fill(tsg)
+    tool.fill_res(ts,tsc,gdix)
