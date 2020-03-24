@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-09 19:39:40
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-09 21:10:28
+@LastEditTime : 2020-03-24 12:21:16
 @FilePath     : /gps-ts/scripts/analysis_ts.py
 @Description  : Analysis gap size of gps time series
 '''
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     for k in sorted(result.keys(), reverse=True):
         k_sum += -k * result[k]
         gap_sum.append(k_sum)
-    logger.debug(gap_sum)
+    # logger.debug(gap_sum)
     plt.subplot(1,2,1)
     plt.bar(result.keys(), result.values())
     plt.ylim(0,50)

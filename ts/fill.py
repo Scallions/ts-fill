@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-03-12 15:48:49
+@LastEditTime : 2020-03-24 12:07:35
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -13,6 +13,8 @@ import ts.ssa as ssa
 from ts.timeseries import SingleTs as STs
 import ts.rnnfill as rnn
 import pandas as pd
+import sys
+import warnings
 
 
 class Filler:
@@ -22,6 +24,14 @@ class Filler:
 class FbFiller(Filler):
     @staticmethod
     def fill(ts):
+        def customwarn(message, category, filename, lineno, file=None,  line=None):
+            sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
+        warnings.showwarning = customwarn
+        f = open("./res/fb.log","w")
+        savestdout = sys.stdout
+        savestderr = sys.stderr
+        sys.stdout = f
+        sys.stderr = f
         ts.complete()
         ts.columns = ['y']
         ts['ds'] = ts.index
@@ -36,7 +46,11 @@ class FbFiller(Filler):
         plt.close("all")
         fts = forecast["yhat"][:-365]
         fts.index = ts.index 
-        return fts
+        tss = STs(datas = fts.values, indexs=ts.index)
+        sys.stdout = savestdout
+        sys.stderr = savestderr
+        f.close()
+        return tss
 
 class SSAFiller(Filler):
     @staticmethod
