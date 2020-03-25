@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 12:58:11
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-05 16:36:36
+@LastEditTime : 2020-03-24 20:12:36
 @FilePath     : /gps-ts/ts/data.py
 @Description  : some func used to process time series
 
@@ -25,7 +25,7 @@ def cwu_loader(filepath):
     """
     df = pd.read_csv(filepath,skiprows=list(range(11)),index_col="Date",parse_dates=True)
     df['jd'] = df.index.to_julian_date()
-    ts = df.iloc[:,[1,2,3,-1]]
+    ts = df.iloc[:,[0,1,2,-1]]
     return ts
 
 

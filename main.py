@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-02-05 14:26:13
-@LastEditTime : 2020-03-12 14:36:49
+@LastEditTime : 2020-03-24 20:11:37
 @LastEditors  : Scallions
 @Description: In User Settings Edit
 @FilePath     : /gps-ts/main.py
@@ -10,17 +10,18 @@ from loguru import logger
 from ts.data import cwu_loader
 from ts.data import FileType as FileType
 from ts.timeseries import SingleTs as Sts
-import ts.fill as fill
+from ts.timeseries import MulTs as Mts
+from ts.regem import fill as regem
 import ts.tool as tool
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     filepath = "./data/BACK.cwu.igs14.csv"
-    ts = Sts(filepath,filetype=FileType.Cwu)
-    tsl = ts.get_longest()
-    # tsl.plot()
-    tsg, gidx = tsl.make_gap(3,0.3)
-    logger.debug(f"tsg size: {tsg.shape}, gidx size: {len(gidx)}")
-    tsc = fill.SSAFiller.fill(tsg)
-    res = tool.fill_res(tsl,tsc,gidx)
-    logger.debug(res)
+    filepath2 = "./data/BLAS.cwu.igs14.csv"
+    ts = Mts(filepath,filetype=FileType.Cwu)
+    ts2 = Mts(filepath2, filetype=FileType.Cwu)
+    ts3 = tool.concat_multss([ts,ts2])
+    logger.debug(ts3.head())
+    ts4 = ts3.get_longest()
+    logger.debug(ts4.shape)
+    regem(ts4)

@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-03-24 12:07:35
+@LastEditTime : 2020-03-24 17:31:37
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -15,11 +15,18 @@ import ts.rnnfill as rnn
 import pandas as pd
 import sys
 import warnings
+import ts.regem as regem
 
 
 class Filler:
     pass
 
+
+class RegEMFiller(Filler):
+    @staticmethod
+    def fill(ts):
+        tss = regem.fill(ts)
+        return MTs(datas = tss.values, indexs = ts.index)
 
 class FbFiller(Filler):
     @staticmethod

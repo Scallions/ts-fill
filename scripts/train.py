@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-09 20:54:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-10 17:20:46
+@LastEditTime : 2020-03-24 14:19:53
 @FilePath     : /gps-ts/scripts/train.py
 @Description  : 
 '''
@@ -50,7 +50,7 @@ class TsDataset(torch.utils.data.Dataset):
     def __len__(self):
         return self.len
 
-class Net(torch.nn.Module):
+class LSTM(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.lstm = torch.nn.LSTM(30,10,num_layers=3)
@@ -60,6 +60,16 @@ class Net(torch.nn.Module):
         out, (h_n, c_n) = self.lstm(x)
         return self.output(out)
 
+
+class TCN(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv1d(1,3,3,stride=1,dilation=1)
+        self.conv2 = torch.nn.Conv1d(3,6,3,stride=1,dilation=2)
+        self.conv3 = torch.nn.Conv1d(6,10,3,stride=1,dilation=4)
+    
+    def forward(self, x):
+        self.conv1(x)
 
 def train(trainset, net, loss):
     """train framework
@@ -89,9 +99,9 @@ def train(trainset, net, loss):
             opt.zero_grad()
             l.backward()
             opt.step()
-            if i % 99 == 0:
+            if i % 100 == 99:
                 print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
-        if checkpoint:
+        if checkpoint and epoch % 20 == 19:
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': net.state_dict(),
@@ -104,7 +114,7 @@ if __name__ == "__main__":
     dataset = TsDataset()
     train_loader = torch.utils.data.DataLoader(dataset,batch_size=12)
 
-    nets = [Net]
+    nets = [LSTM]
     for Net_ in nets:
         net = Net_()
         train(train_loader,net,torch.nn.MSELoss())

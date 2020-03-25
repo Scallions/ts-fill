@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-12 15:36:31
+@LastEditTime : 2020-03-24 19:49:55
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -139,3 +139,12 @@ def fill_res(ts,tsf,gidx):
 
     return status
 
+
+def concat_multss(tss):
+    res = tss[0]
+    for ts in tss[1:]:
+        r_idx = res.index
+        t_idx = ts.index
+        a_idx = ts.index & r_idx 
+        res = pd.concat([res.loc[a_idx], ts.loc[a_idx]],axis=1)
+    return type(tss[0]).from_df(res)
