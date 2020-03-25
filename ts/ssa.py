@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-22 10:40:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-05 17:37:12
+@LastEditTime : 2020-03-25 17:56:36
 @FilePath     : /gps-ts/ts/ssa.py
 @Description  : 
 '''
@@ -19,7 +19,7 @@ def SSA(X, K, M, callback=None,plotpc=False):
     This function can analyze X by SSA with arguments K and M and return the rebuild version. K is the number of EOFs used to rebuild the X. M is the length of the sub series.The `callback` argument is a function which input EOFs and can process EOFs by what way u want such as plot the EOFs.The `plotpc` is a boolean that control whether plot the PCs time series.
 
     args:
-        X: List
+        X: ndarray
         K: Int
         M: Int
         callback: Function(Matrix)
@@ -155,3 +155,69 @@ def iter_SSA(X, indexs_cv, Mmin=1, Mmax=365, sigma=0.01):
                 print(M,K0,K4)
                 break
     return Deltas
+
+
+def MSSA(X, K, M):
+    # X.shape = (N,L)
+    # 获取 X 形状
+    N = X.shape[0]
+    N_ = N-M+1
+    D = None
+    for x in X.T:
+        d = np.zeros([M,N-M+1]) # 生成 D 矩阵 时间堆叠
+        for i in range(N_):
+            d[:,i] = x[i:i+M]
+        if not isinstance(D, np.ndarray):
+            D = d
+        else:
+            D = np.vstack((D, d))
+    Cx = np.dot(D, D.T) / (N - M + 1)
+    eigs, E = eig(Cx)
+
+    T = np.dot(E[:,0:K].T, D) # PC times series
+    D_ = np.dot(E[:,0:K], T)
+    
+    X_ = np.zeros(X.shape)
+    # 重新 构建 X_
+    # Dr = np.fliplr(D_)
+    for j in range(X.shape[1]):
+        d = D_[j*M:(j+1)*M]
+        Dr = np.fliplr(d)
+        for i in range(X.shape[0]):
+            X_[i,j] = np.mean(np.diag(Dr,N_-i-1))
+    return X_
+
+def iter_MSSA_inner(X, sigma, K, M):
+    """
+    X 是缺失时间序列，对于给定的sigma,K,M 可以进行迭代插值，返回插值后的时间序列
+    
+    args:
+        X::Ts
+        sigama::Float
+        K::Int
+        M::Int
+    return:
+        _::Ts
+    """
+    X = X.to_numpy(copy=True)
+    # print(K)
+    X_m = X[~np.isnan(X)].mean() # 获取平均值
+    Xt = X.copy()
+    Xt[np.isnan(X)] = X_m # 对gap 用平均值填充
+    Xs = Xt - X_m # 去除平均值
+    #plt.plot(Xs)
+    n = 0
+    while True:
+        Xn = MSSA(Xs, K, M)
+        Xn[~np.isnan(X)] = X[~np.isnan(X)] - X_m # 对非gap区 用原值回填 只迭代 gap 区
+        d = np.abs(Xn[np.isnan(X)]-Xs[np.isnan(X)]).max() # 计算 迭代终止条件
+        if n > 200:
+            sigma += 0.001 # 对 终止条件阈值进行调制，避免长时间无效迭代
+            logger.debug("SSA inner sigma iter: {}",n+1)
+            logger.debug("delta : {}",d)
+        if d < sigma:
+            #print(Xs[125],Xn[125])
+            break
+        Xs[np.isnan(X)] = Xn[np.isnan(X)] # 构建 新的 Xs 进行 SSA
+        n = n+1
+    return Xn + X_m

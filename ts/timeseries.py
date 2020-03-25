@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-25 11:16:31
+@LastEditTime : 2020-03-25 18:04:34
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -109,7 +109,7 @@ class SingleTs(TimeSeries):
         return gaps
 
 class MulTs(TimeSeries):
-    def __init__(self, filepath="", filetype=data.FileType.Df, datas=None, indexs = None):
+    def __init__(self, filepath="", filetype=data.FileType.Df, datas=None, indexs = None, columns=None):
         if filepath != "" and filetype == data.FileType.Cwu:
             ts = data.cwu_loader(filepath)
             _data = ts.iloc[:,[0,1,2]].to_numpy()
@@ -120,7 +120,13 @@ class MulTs(TimeSeries):
         if filetype == data.FileType.Df and (isinstance(datas, MulTs) or isinstance(datas,pd.DataFrame)):
             _data = datas.values
             index = datas.index
-            columns = datas.columns
+            if columns == None:
+                columns = datas.columns
+
+        if filetype == data.FileType.Df and isinstance(datas, np.ndarray):
+            _data = datas
+            index = indexs
+        
         
         super().__init__(data=_data, index=index, columns=columns)
 

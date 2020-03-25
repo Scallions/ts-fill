@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-25 11:23:55
+@LastEditTime : 2020-03-25 18:06:44
 @FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -21,7 +21,7 @@ from loguru import logger
 import pandas as pd
 import time 
 
-def load_data(lengths=3):
+def load_data(lengths=3,epoch=6):
     """load data
     
     Args:
@@ -40,7 +40,7 @@ def load_data(lengths=3):
 
     # data increase
     import random
-    for j in range(5):
+    for j in range(epoch):
         random.shuffle(tss)
         for i in range(0,nums-lengths, lengths):
             mts = tool.concat_multss(tss[i:i+lengths])
@@ -52,10 +52,10 @@ if __name__ == "__main__":
     """genrel code for compare
     """
     result = {}    # result record different between gap sizes and filler functions
-    tss = load_data()
+    tss = load_data(epoch=20)
     gap_sizes = [3,5,10,15,30,50]
-    fillers = [fill.RegEMFiller]
-    fillernames = ["RegEM"]
+    fillers = [fill.RegEMFiller, fill.MSSAFiller]
+    fillernames = ["RegEM","MSSA"]
     result = pd.DataFrame(columns=fillernames,index=gap_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
     for gap_size in gap_sizes:

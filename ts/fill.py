@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-03-25 11:18:42
+@LastEditTime : 2020-03-25 17:26:35
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -68,6 +68,13 @@ class SSAFiller(Filler):
         tss = STs(datas = tc, indexs=tsc.index)
         return tss
 
+class MSSAFiller(Filler):
+    @staticmethod
+    def fill(ts):
+        tsc = ts.complete()
+        tc = ssa.iter_MSSA_inner(tsc, 0.01, 4, 365)
+        tss = MTs(datas = tc, indexs=tsc.index, columns=tsc.columns)
+        return tss
 
 class MeanFiller(Filler):
     @staticmethod
