@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-24 20:22:32
+@LastEditTime : 2020-03-25 11:16:31
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -80,7 +80,9 @@ class SingleTs(TimeSeries):
     def make_gap(self,gapsize=3, per = 0.2):
         """make gap in ts
         """
-        tsg,gindex = tool.make_gap(self,gapsize, per)
+        gindex = tool.make_gap(self,gapsize, per)
+        tsg = self.copy()
+        tsg.loc[gindex] = None
         return SingleTs(datas = tsg),gindex
 
 
@@ -166,8 +168,18 @@ class MulTs(TimeSeries):
     def make_gap(self,gapsize=3, per = 0.2):
         """make gap in ts
         """
-        tsg,gindex = tool.make_gap(self,gapsize, per)
-        return SingleTs(datas = tsg),gindex
+        gindex = tool.make_gap(self,gapsize, per)
+        nums_c = self.shape[1]
+        import random
+        c_idx = list(range(nums_c))
+        c_s = self.columns 
+        c_idx = list(map(lambda x: str(x[0])+str(x[1]),zip(c_s,c_idx)))
+        self.columns = c_idx
+        random.shuffle(c_idx)
+        c_idx = c_idx[0:(nums_c//2)]
+        tsg = self.copy()
+        g = tsg.loc[gindex,c_idx] = None
+        return MulTs(datas = tsg),gindex, c_idx
 
     @staticmethod
     def from_df(df):

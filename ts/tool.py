@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-24 19:49:55
+@LastEditTime : 2020-03-25 10:25:36
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -56,10 +56,9 @@ def delta(X, X_):
     return np.mean(np.square(X - X_))
 
 def make_gap(ts, gap_size=3, per = 0.2):
-    """make gap in ts return copy
+    """make gap idx
     
     Args:
-        ts (df): ts without gap
         gap_size (int, optional): gap size will in the ts. Defaults to 3.
     """
     # TODO: make gap not neighbor @scallions
@@ -78,15 +77,13 @@ def make_gap(ts, gap_size=3, per = 0.2):
         gap_index.append(r_index)
     
     logger.debug(f"gap_count: {gap_count}, gap_index len: {len(gap_index)}")
-    tsc = ts.copy()
     gap_indexs = []
     
     for ind in gap_index:
         for i in range(gap_size):
-            g_ind = tsc.index[ind] + pd.Timedelta(days=i)
+            g_ind = ts.index[ind] + pd.Timedelta(days=i)
             gap_indexs.append(g_ind)
-            tsc.loc[g_ind] = None
-    return tsc,gap_indexs
+    return gap_indexs
 
 def get_status_between(ts1, ts2):
     """description for delta between ts1 and ts2
@@ -122,7 +119,7 @@ def get_all_cts(ts):
         sub_ts.append(ts.loc[gap_size.starts[i]:gap_size.starts[i]+pd.Timedelta(days=length-1)])
     return sub_ts
 
-def fill_res(ts,tsf,gidx):
+def fill_res(ts,tsf,gidx,c_idx=None):
     """result status between tsg and tsf
     
     Args:
@@ -130,11 +127,13 @@ def fill_res(ts,tsf,gidx):
         tsf (ts): ts after imputation
         gidx (list): gap idx list
     """
-    ts_g = tsf.loc[gidx]
-    ts_t = ts.loc[gidx]
-
+    if c_idx == None:
+        ts_g = tsf.loc[gidx]
+        ts_t = ts.loc[gidx]
+    else:
+        ts_g = tsf.loc[gidx,c_idx]
+        ts_t = ts.loc[gidx,c_idx]
     delta = ts_g.sub(ts_t).abs()
-
     status = delta.describe()
 
     return status

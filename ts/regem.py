@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-23 18:23:29
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-24 20:23:36
+@LastEditTime : 2020-03-25 10:15:32
 @FilePath     : /gps-ts/ts/regem.py
 @Description  : regem for imputation
 use matlab connection pls open ur matlab and change dir to where reg em in.
@@ -32,7 +32,8 @@ def fill(ts):
     eng = matlab.engine.connect_matlab()
     eng.edit('regem', nargout=1)
     ts = ts.complete()
-    ts.iloc[:,[0,1,3,4]].to_csv(fp)
+    # ts.iloc[:,[0,1,3,4]].to_csv(fp)
+    ts.to_csv(fp)
 
     # save fill to file to make reg em read
 
