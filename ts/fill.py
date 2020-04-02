@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-03-25 17:26:35
+@LastEditTime : 2020-04-02 16:57:49
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -31,7 +31,7 @@ class RegEMFiller(Filler):
 
 class FbFiller(Filler):
     @staticmethod
-    def fill(ts):
+    def fill(ts, plot=False):
         def customwarn(message, category, filename, lineno, file=None,  line=None):
             sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
         warnings.showwarning = customwarn
@@ -47,11 +47,12 @@ class FbFiller(Filler):
         m.fit(ts)
         future = m.make_future_dataframe(periods=365)
         forecast = m.predict(future)
-        fig1 = m.plot(forecast)
-        fig1.savefig("./fig/forecast.png")
-        fig2 = m.plot_components(forecast)
-        fig2.savefig("./fig/components.png")
-        plt.close("all")
+        if plot:
+            fig1 = m.plot(forecast)
+            fig1.savefig("./fig/forecast.png")
+            fig2 = m.plot_components(forecast)
+            fig2.savefig("./fig/components.png")
+            plt.close("all")
         fts = forecast["yhat"][:-365]
         fts.index = ts.index 
         tss = STs(datas = fts.values, indexs=ts.index)
@@ -171,7 +172,6 @@ class SplineFiller(Filler):
         tc = ts.x.fillna(tsc.x.interpolate(method='spline', order=order))
         tss = STs(datas = tc, indexs=tsc.index)
         return tss
-
 
 class LstmFiller(Filler):
     @staticmethod

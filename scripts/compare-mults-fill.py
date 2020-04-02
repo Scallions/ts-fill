@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-25 18:06:44
+@LastEditTime : 2020-04-02 16:53:53
 @FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -53,22 +53,23 @@ if __name__ == "__main__":
     """
     result = {}    # result record different between gap sizes and filler functions
     tss = load_data(epoch=20)
-    gap_sizes = [3,5,10,15,30,50]
+    gap_sizes = [1,2,3,4,5,6,10,15,30,50]
     fillers = [fill.RegEMFiller, fill.MSSAFiller]
     fillernames = ["RegEM","MSSA"]
     result = pd.DataFrame(columns=fillernames,index=gap_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
     for gap_size in gap_sizes:
+        val_tss = [(ts.get_longest(), *ts.get_longest().make_gap()) for ts in tss]
+        
         for i,filler in enumerate(fillers):
             res = None
             start = time.time()
             count = 0
             gap_count = 0
-            for ts in tss:
-                tsl = ts.get_longest()
-                if len(tsl) < 380: break
-                tsg, gidx, gridx = tsl.make_gap(gap_size)
+            for tsl, tsg, gidx, gridx in val_tss:
+                if len(tsl) < 380: continue
                 tsc = filler.fill(tsg)
+                tsl.columns = tsc.columns
                 this_res = tool.fill_res(tsc,tsl,gidx, gridx)
                 if not isinstance(res, pd.DataFrame):
                     res = this_res
