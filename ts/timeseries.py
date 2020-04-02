@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-25 18:04:34
+@LastEditTime : 2020-04-02 18:14:21
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -77,10 +77,10 @@ class SingleTs(TimeSeries):
         tsl = tool.get_longest(self)
         return SingleTs(datas = tsl)
     
-    def make_gap(self,gapsize=3, per = 0.2):
+    def make_gap(self,gapsize=3, per = 0.2, cache_size=0):
         """make gap in ts
         """
-        gindex = tool.make_gap(self,gapsize, per)
+        gindex = tool.make_gap(self,gapsize, per, cache_size)
         tsg = self.copy()
         tsg.loc[gindex] = None
         return SingleTs(datas = tsg),gindex
@@ -171,10 +171,10 @@ class MulTs(TimeSeries):
                 start = indexs[i]
         return gaps
 
-    def make_gap(self,gapsize=3, per = 0.2):
+    def make_gap(self,gapsize=3, per = 0.2, cache_size = 0):
         """make gap in ts
         """
-        gindex = tool.make_gap(self,gapsize, per)
+        gindex = tool.make_gap(self,gapsize, per, cache_size)
         nums_c = self.shape[1]
         import random
         c_idx = list(range(nums_c))
