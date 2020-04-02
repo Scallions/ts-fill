@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-04-02 16:57:49
+@LastEditTime : 2020-04-02 18:07:44
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -41,6 +41,7 @@ class FbFiller(Filler):
         sys.stdout = f
         sys.stderr = f
         ts.complete()
+        ts = ts.copy()
         ts.columns = ['y']
         ts['ds'] = ts.index
         m = Prophet()
