@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-28 19:50:25
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-02 18:10:17
+@LastEditTime : 2020-04-02 20:05:12
 @FilePath     : /gps-ts/scripts/compare-gapsize.py
 @Description  : gap size compare
 '''
@@ -25,11 +25,12 @@ def load_data():
     Returns:
         List[TimeSeries]: a list of ts
     """
+    dir_path = "./data/"
     tss = []
-    files = os.listdir("./data")
+    files = os.listdir(dir_path)
     for file_ in files:
         if ".cwu.igs14.csv" in file_:
-            tss.append(Sts("./data/" + file_,data.FileType.Cwu))
+            tss.append(Sts(dir_path + file_,data.FileType.Cwu))
     return tss
 
 
@@ -62,38 +63,26 @@ if __name__ == "__main__":
         fill.QuadraticFiller,
         fill.CubicFiller,
         fill.SLinearFiller,
-        fill.AkimaFiller,
         fill.PolyFiller,
+        fill.BarycentricFiller,
         fill.SplineFiller,
+        fill.PchipFiller,
+        fill.KroghFiller,
+        fill.PiecewisePolynomialFiller,
+        fill.FromDerivativesFiller,
+        fill.AkimaFiller,
         fill.FbFiller,
         fill.SSAFiller
         ]
 
-    fillernames = [
-        "Mean", 
-        "Median", 
-        "RollingMean",
-        "RollingMedian",
-        "Linear", 
-        "Time",
-        "Quadratic",
-        "Cubic",
-        "SLinear",
-        "Akima",
-        "Poly",
-        "Spline",
-        "fbprophet",
-        "SSA"
-        ]
 
-
-    result = pd.DataFrame(columns=fillernames,index=gap_sizes+['time','gap_count','count'])
+    result = pd.DataFrame(columns=[filler.name for filler in fillers],index=gap_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
     for gap_size in gap_sizes:
         val_tss = [(ts.get_longest(), *ts.get_longest().make_gap(gap_size)) for ts in tss]
         
         for i,filler in enumerate(fillers):
-            logger.info(f"gap size: {gap_size}, filler: {fillernames[i]}")
+            logger.info(f"gap size: {gap_size}, filler: {filler.name}")
             res = None
             start = time.time()
             count = 0
@@ -116,12 +105,12 @@ if __name__ == "__main__":
             res_mean = sum(counts * means) / sum(counts)
             
             end  = time.time()
-            result.loc[gap_size,fillernames[i]] = res_mean
-            result.loc['time', fillernames[i]] = (end-start) + result.loc['time', fillernames[i]]
-            result.loc['count', fillernames[i]] = count
-            result.loc['gap_count', fillernames[i]] = gap_count
+            result.loc[gap_size,filler.name] = res_mean
+            result.loc['time', filler.name] = (end-start) + result.loc['time', filler.name]
+            result.loc['count', filler.name] = count
+            result.loc['gap_count', filler.name] = gap_count
             
-            logger.info(f"{fillernames[i]} mean: {res_mean} time: {end-start:0.4f} gap: {gap_size}")
+            logger.info(f"{filler.name} mean: {res_mean} time: {end-start:0.4f} gap: {gap_size}")
             
 
     result.to_csv("res/fill_gapsize.csv")

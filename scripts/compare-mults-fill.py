@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-02 16:53:53
+@LastEditTime : 2020-04-02 20:19:51
 @FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -30,11 +30,12 @@ def load_data(lengths=3,epoch=6):
     Returns:
         [mts]: mts s
     """
+    dir_path = "./data/"
     tss = []
-    files = os.listdir("./data")
+    files = os.listdir(dir_path)
     for file_ in files:
         if ".cwu.igs14.csv" in file_:
-            tss.append(Mts("./data/" + file_,data.FileType.Cwu))
+            tss.append(Mts(dir_path + file_,data.FileType.Cwu))
     nums = len(tss)
     rtss = []
 
@@ -52,11 +53,41 @@ if __name__ == "__main__":
     """genrel code for compare
     """
     result = {}    # result record different between gap sizes and filler functions
-    tss = load_data(epoch=20)
-    gap_sizes = [1,2,3,4,5,6,10,15,30,50]
-    fillers = [fill.RegEMFiller, fill.MSSAFiller]
-    fillernames = ["RegEM","MSSA"]
-    result = pd.DataFrame(columns=fillernames,index=gap_sizes+['time','gap_count','count'])
+    tss = load_data(epoch=10)
+    gap_sizes = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        10,
+        15,
+        30,
+        50
+        ]
+
+    fillers = [
+        fill.MeanFiller,
+        fill.MedianFiller,
+        fill.LinearFiller, 
+        fill.TimeFiller,
+        fill.QuadraticFiller,
+        fill.CubicFiller,
+        fill.SLinearFiller,
+        fill.PolyFiller,
+        # fill.BarycentricFiller,
+        fill.SplineFiller,
+        fill.PchipFiller,
+        fill.KroghFiller,
+        fill.PiecewisePolynomialFiller,
+        fill.FromDerivativesFiller,
+        fill.AkimaFiller,
+        fill.RegEMFiller, 
+        # fill.MSSAFiller,
+        ]
+
+    result = pd.DataFrame(columns=[filler.name for filler in fillers],index=gap_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
     for gap_size in gap_sizes:
         val_tss = [(ts.get_longest(), *ts.get_longest().make_gap()) for ts in tss]
@@ -84,12 +115,12 @@ if __name__ == "__main__":
             res_mean = sum(counts * means) / sum(counts)
             
             end  = time.time()
-            result.loc[gap_size,fillernames[i]] = res_mean
-            result.loc['time', fillernames[i]] = (end-start) + result.loc['time', fillernames[i]]
-            result.loc['count', fillernames[i]] = count
-            result.loc['gap_count', fillernames[i]] = gap_count
+            result.loc[gap_size,filler.name] = res_mean
+            result.loc['time', filler.name] = (end-start) + result.loc['time', filler.name]
+            result.loc['count', filler.name] = count
+            result.loc['gap_count', filler.name] = gap_count
             
-            logger.info(f"{fillernames[i]} mean: {res_mean} time: {end-start:0.4f} gap: {gap_size}")
+            logger.info(f"{filler.name} mean: {res_mean} time: {end-start:0.4f} gap: {gap_size}")
             
 
     result.to_csv("res/fill_mul_gapsize.csv")

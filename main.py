@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-02-05 14:26:13
-@LastEditTime : 2020-03-25 18:06:21
+@LastEditTime : 2020-04-02 20:11:17
 @LastEditors  : Scallions
 @Description: In User Settings Edit
 @FilePath     : /gps-ts/main.py
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     ts3 = tool.concat_multss([ts,ts2])
     logger.debug(ts3.head())
     ts4 = ts3.get_longest()
-    ts5,gidx,cidx = ts4.make_gap()
-    ts6 = fill.MSSAFiller.fill(ts5)
+    ts5,gidx,cidx = ts4.make_gap(cache_size=1)
+    ts6 = fill.BarycentricFiller.fill(ts5)
     res = tool.fill_res(ts6,ts4,gidx,cidx)
     logger.debug(res)

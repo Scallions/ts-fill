@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-22 10:40:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-25 17:56:36
+@LastEditTime : 2020-04-02 19:19:02
 @FilePath     : /gps-ts/ts/ssa.py
 @Description  : 
 '''
@@ -83,7 +83,7 @@ def iter_SSA_inner(X, sigma, K, M):
         Xn[~np.isnan(X)] = X[~np.isnan(X)] - X_m # 对非gap区 用原值回填 只迭代 gap 区
         d = np.abs(Xn[np.isnan(X)]-Xs[np.isnan(X)]).max() # 计算 迭代终止条件
         if n > 200:
-            sigma += 0.001 # 对 终止条件阈值进行调制，避免长时间无效迭代
+            sigma += 0.01 # 对 终止条件阈值进行调制，避免长时间无效迭代
             logger.debug("SSA inner sigma iter: {}",n+1)
             logger.debug("delta : {}",d)
         if d < sigma:
@@ -212,7 +212,7 @@ def iter_MSSA_inner(X, sigma, K, M):
         Xn[~np.isnan(X)] = X[~np.isnan(X)] - X_m # 对非gap区 用原值回填 只迭代 gap 区
         d = np.abs(Xn[np.isnan(X)]-Xs[np.isnan(X)]).max() # 计算 迭代终止条件
         if n > 200:
-            sigma += 0.001 # 对 终止条件阈值进行调制，避免长时间无效迭代
+            sigma += 0.01 # 对 终止条件阈值进行调制，避免长时间无效迭代
             logger.debug("SSA inner sigma iter: {}",n+1)
             logger.debug("delta : {}",d)
         if d < sigma:
