@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-28 19:50:25
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-02 20:05:12
+@LastEditTime : 2020-04-17 19:26:04
 @FilePath     : /gps-ts/scripts/compare-gapsize.py
 @Description  : gap size compare
 '''
@@ -54,32 +54,33 @@ if __name__ == "__main__":
         ]
 
     fillers = [
-        fill.MeanFiller, 
-        fill.MedianFiller,
-        fill.RollingMeanFiller,
-        fill.RollingMedianFiller,
-        fill.LinearFiller, 
-        fill.TimeFiller,
-        fill.QuadraticFiller,
-        fill.CubicFiller,
-        fill.SLinearFiller,
-        fill.PolyFiller,
-        fill.BarycentricFiller,
-        fill.SplineFiller,
-        fill.PchipFiller,
-        fill.KroghFiller,
-        fill.PiecewisePolynomialFiller,
-        fill.FromDerivativesFiller,
-        fill.AkimaFiller,
-        fill.FbFiller,
-        fill.SSAFiller
+        fill.TCNFiller
+        # fill.MeanFiller, 
+        # fill.MedianFiller,
+        # fill.RollingMeanFiller,
+        # fill.RollingMedianFiller,
+        # fill.LinearFiller, 
+        # fill.TimeFiller,
+        # fill.QuadraticFiller,
+        # fill.CubicFiller,
+        # fill.SLinearFiller,
+        # fill.PolyFiller,
+        # fill.BarycentricFiller,
+        # fill.SplineFiller,
+        # fill.PchipFiller,
+        # fill.KroghFiller,
+        # fill.PiecewisePolynomialFiller,
+        # fill.FromDerivativesFiller,
+        # fill.AkimaFiller,
+        # fill.FbFiller,
+        # fill.SSAFiller
         ]
 
 
     result = pd.DataFrame(columns=[filler.name for filler in fillers],index=gap_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
     for gap_size in gap_sizes:
-        val_tss = [(ts.get_longest(), *ts.get_longest().make_gap(gap_size)) for ts in tss]
+        val_tss = [(ts.get_longest(), *ts.get_longest().make_gap(gap_size, cache_size=400)) for ts in tss]
         
         for i,filler in enumerate(fillers):
             logger.info(f"gap size: {gap_size}, filler: {filler.name}")
@@ -88,7 +89,7 @@ if __name__ == "__main__":
             count = 0
             gap_count = 0
             for tsl, tsg, gidx in val_tss:
-                if len(tsl) < 380: continue
+                if len(tsl) < 1000: continue
                 tsc = filler.fill(tsg)
                 this_res = tool.fill_res(tsc,tsl,gidx)
                 #logger.debug(this_res)

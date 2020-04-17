@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-04-02 20:04:56
+@LastEditTime : 2020-04-17 18:58:55
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -13,6 +13,7 @@ import ts.ssa as ssa
 from ts.timeseries import SingleTs as STs
 from ts.timeseries import MulTs as MTs
 import ts.rnnfill as rnn
+import ts.tcnfill as tcn
 import pandas as pd
 import sys
 import warnings
@@ -242,9 +243,20 @@ class PchipFiller(Filler):
         return tss
 
 class LSTMFiller(Filler):
+    name = "LSTM"
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
         tsc = tsc.copy()
         tc = rnn.lstm_fill(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index)
+
+
+class TCNFiller(Filler):
+    name = "TCN"
+    @staticmethod
+    def fill(ts):
+        tsc = ts.complete()
+        tsc = tsc.copy()
+        tc = tcn.tcn_fill(tsc)
         return type(ts)(datas = tc, indexs=tsc.index)

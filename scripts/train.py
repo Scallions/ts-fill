@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-09 20:54:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-24 14:19:53
+@LastEditTime : 2020-04-17 19:40:38
 @FilePath     : /gps-ts/scripts/train.py
 @Description  : 
 '''
@@ -18,6 +18,7 @@ import ts.data as data
 from ts.timeseries import SingleTs as Sts
 
 import torch 
+from tcn import TemporalConvNet
 
 
 def load_data():
@@ -27,25 +28,28 @@ def load_data():
         List[TimeSeries]: a list of ts
     """
     tss = []
-    files = os.listdir("./data")
+    dir_path = "./data/"
+    files = os.listdir(dir_path)
     for file_ in files:
         if ".cwu.igs14.csv" in file_:
-            tss.append(Sts("./data/" + file_,data.FileType.Cwu))
+            tss.append(Sts(dir_path + file_,data.FileType.Cwu))
     return tss
 
+
+length = 365
 
 """
 ts dataset
 取30天为input，之后一天为output
 """
 class TsDataset(torch.utils.data.Dataset):
-    def __init__(self):
+    def __init__(self, ts):
         super().__init__()
-        self.data = load_data()[0].get_longest()
-        self.len = self.data.shape[0] - 31
+        self.data = ts.get_longest()
+        self.len = self.data.shape[0] - length - 1
 
     def __getitem__(self, index):
-        return self.data.iloc[index:index+30].values, self.data.iloc[index+30].values
+        return self.data.iloc[index:index+length].values, self.data.iloc[index+length].values
 
     def __len__(self):
         return self.len
@@ -53,8 +57,8 @@ class TsDataset(torch.utils.data.Dataset):
 class LSTM(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.lstm = torch.nn.LSTM(30,10,num_layers=3)
-        self.output = torch.nn.Linear(10,1)
+        self.lstm = torch.nn.LSTM(length,30,2)
+        self.output = torch.nn.Linear(30,1)
     
     def forward(self, x):
         out, (h_n, c_n) = self.lstm(x)
@@ -64,14 +68,19 @@ class LSTM(torch.nn.Module):
 class TCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = torch.nn.Conv1d(1,3,3,stride=1,dilation=1)
-        self.conv2 = torch.nn.Conv1d(3,6,3,stride=1,dilation=2)
-        self.conv3 = torch.nn.Conv1d(6,10,3,stride=1,dilation=4)
+        self.tcn = TemporalConvNet(1,[10,10,10,10,10])
+        self.conv1 = torch.nn.Conv1d(10,1,5)
+        self.fc = torch.nn.Linear(length-4,1)
+        self.relu = torch.nn.ReLU()
     
     def forward(self, x):
-        self.conv1(x)
+        x = self.tcn(x)
+        x = self.relu(x)
+        x = self.conv1(x)
+        x = self.relu(x)
+        return self.fc(x)
 
-def train(trainset, net, loss):
+def train(tss, net, loss):
     """train framework
     
     Args:
@@ -84,40 +93,46 @@ def train(trainset, net, loss):
     
     opt = torch.optim.Adam(net.parameters(), lr=0.001, weight_decay=0.1)
 
-    epochs = 100
+    epochs = 200
 
     checkpoint = True
 
     for epoch in range(epochs):
-        for i, data in enumerate(trainset):
-            x,y = data
-            y = y.float()
-            x = x.float()
-            x = x.permute(0,2,1)
-            out_p = net(x).squeeze(-1)
-            l = loss(out_p,y)
-            opt.zero_grad()
-            l.backward()
-            opt.step()
-            if i % 100 == 99:
-                print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
-        if checkpoint and epoch % 20 == 19:
+        lm = 0
+        for ts in tss:
+            if ts.shape[0] < 800: continue
+            dataset = TsDataset(ts)
+            train_loader = torch.utils.data.DataLoader(dataset,batch_size=30)
+            for i, data in enumerate(train_loader):
+                x,y = data
+                y = y.float()
+                x = x.float()
+                x = x.permute(0,2,1)
+                out_p = net(x).squeeze(-1)
+                l = loss(out_p,y)
+                opt.zero_grad()
+                l.backward()
+                opt.step()
+                if lm < l.data.item():
+                    lm = l.data.item()
+                if i % 30 == 29:
+                    print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
+        print(f"Epoch: {epoch}, Loss: {lm}")
+        if checkpoint and epoch % 2 == 1:
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': net.state_dict(),
                 'opt_state_dict' : opt.state_dict(),
                 'loss': l,
-            }, f"models/lstm/{epoch}-{l}.tar")                    
+            }, f"models/tcn/{epoch}.tar")                    
 
 if __name__ == "__main__":
-    
-    dataset = TsDataset()
-    train_loader = torch.utils.data.DataLoader(dataset,batch_size=12)
+    tss = load_data()
+    tcn = TCN()
 
-    nets = [LSTM]
-    for Net_ in nets:
-        net = Net_()
-        train(train_loader,net,torch.nn.MSELoss())
+    nets = [tcn]
+    for net in nets:
+        train(tss,net,torch.nn.MSELoss())
 
 
 

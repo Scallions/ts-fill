@@ -1,0 +1,10 @@
+/Users/scallions/opt/miniconda3/envs/gps/lib/python3.7/site-packages/fbprophet/forecaster.py:400: FutureWarning:
+
+The pandas.datetime class is deprecated and will be removed from pandas in a future version. Import from datetime module instead.
+
+Traceback (most recent call last):
+  File "/Volumes/SSD/Code/gps-ts/main.py", line 38, in <module>
+    ts4 = filler().fill(ts3)
+  File "/Volumes/SSD/Code/gps-ts/ts/fill.py", line 64, in fill
+    tss = type(ts)(datas = fts.values, indexs=ts.index)
+TypeError: __init__() got an unexpected keyword argument 'datas'
