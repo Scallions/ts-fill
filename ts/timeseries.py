@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-02 18:14:21
+@LastEditTime : 2020-04-18 21:03:26
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -48,11 +48,11 @@ class SingleTs(TimeSeries):
             index = ts.index
             columns = ['x']
         # load custom data
-        if filetype == data.FileType.Df and (isinstance(datas, SingleTs) or isinstance(datas,pd.DataFrame)):
+        if (isinstance(datas, SingleTs) or isinstance(datas,pd.DataFrame)):
             _data = datas.x
             index = datas.index
             columns = ['x']
-        if filetype == data.FileType.Df and (isinstance(datas, np.ndarray) or isinstance(datas,pd.Series)):
+        if (isinstance(datas, np.ndarray) or isinstance(datas,pd.Series)):
             _data = datas
             index = indexs 
             columns = ['x']

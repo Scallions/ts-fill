@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-09 20:54:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-17 19:40:38
+@LastEditTime : 2020-04-19 15:36:49
 @FilePath     : /gps-ts/scripts/train.py
 @Description  : 
 '''
@@ -16,9 +16,12 @@ import matplotlib.pyplot as plt
 
 import ts.data as data
 from ts.timeseries import SingleTs as Sts
+import ts.fill as fill
 
 import torch 
 from tcn import TemporalConvNet
+from gln import GLN
+import numpy as np
 
 
 def load_data():
@@ -36,12 +39,29 @@ def load_data():
     return tss
 
 
-length = 365
+length = 1024
 
 """
 ts dataset
 取30天为input，之后一天为output
 """
+
+class TssDataset(torch.utils.data.Dataset):
+    def __init__(self, ts):
+        super().__init__()
+        self.data = ts.get_longest()
+        self.data = self.data.to_numpy()
+        self.mean = np.mean(self.data)
+        self.std = np.std(self.data)
+        self.data = (self.data - self.mean) / self.std
+        self.len = self.data.shape[0] - length - 1
+
+    def __getitem__(self, index):
+        return self.data[index:index+length], self.data[index:index+length]
+
+    def __len__(self):
+        return self.len
+
 class TsDataset(torch.utils.data.Dataset):
     def __init__(self, ts):
         super().__init__()
@@ -63,6 +83,7 @@ class LSTM(torch.nn.Module):
     def forward(self, x):
         out, (h_n, c_n) = self.lstm(x)
         return self.output(out)
+
 
 
 class TCN(torch.nn.Module):
@@ -93,6 +114,56 @@ def train(tss, net, loss):
     
     opt = torch.optim.Adam(net.parameters(), lr=0.001, weight_decay=0.1)
 
+    epochs = 400
+
+    checkpoint = True
+
+    for epoch in range(epochs):
+        lm = 0
+        for ts in tss:
+            dataset = TssDataset(ts)
+            if dataset.len < 100: continue
+            train_loader = torch.utils.data.DataLoader(dataset,batch_size=30,drop_last=True)
+            for i, data in enumerate(train_loader):
+                x,y = data
+                y = y.float()
+                x = x.float()
+                x = x.permute(0,2,1)
+                y = y.permute(0,2,1)
+                out_p = net(x)
+                out_p = out_p.squeeze(-1)
+                l = loss(out_p,y)
+                opt.zero_grad()
+                l.backward()
+                opt.step()
+                if lm < l.data.item():
+                    lm = l.data.item()
+                if i % 30 == 29:
+                    print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
+            break
+        print(f"Epoch: {epoch}, Loss: {lm}")
+        if checkpoint and epoch % 2 == 1:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': net.state_dict(),
+                'opt_state_dict' : opt.state_dict(),
+                'loss': l,
+            }, f"models/gln/{epoch}.tar")                    
+
+
+def traintcn(tss, net, loss):
+    """train framework
+    
+    Args:
+        trainset (dataset): trainset
+        net (nn.Module): lstm net needed to train
+        loss (func): loss function
+    """
+    if not loss:
+        loss = torch.nn.MSELoss()
+    
+    opt = torch.optim.Adam(net.parameters(), lr=0.001, weight_decay=0.1)
+
     epochs = 200
 
     checkpoint = True
@@ -100,15 +171,16 @@ def train(tss, net, loss):
     for epoch in range(epochs):
         lm = 0
         for ts in tss:
-            if ts.shape[0] < 800: continue
-            dataset = TsDataset(ts)
+            dataset = TssDataset(ts)
+            if dataset.len < 100: continue
             train_loader = torch.utils.data.DataLoader(dataset,batch_size=30)
             for i, data in enumerate(train_loader):
                 x,y = data
                 y = y.float()
                 x = x.float()
                 x = x.permute(0,2,1)
-                out_p = net(x).squeeze(-1)
+                out_p, _ = net(x)
+                out_p = out_p.squeeze(-1)
                 l = loss(out_p,y)
                 opt.zero_grad()
                 l.backward()
@@ -124,15 +196,56 @@ def train(tss, net, loss):
                 'model_state_dict': net.state_dict(),
                 'opt_state_dict' : opt.state_dict(),
                 'loss': l,
-            }, f"models/tcn/{epoch}.tar")                    
+            }, f"models/tcn/{epoch}.tar")    
+
+
+def test(tss, net):
+    for ts in tss:
+        tsl = ts.get_longest()
+        tsg,gidx = tsl.make_gap(30, cache_size=100)
+        ts2 = fill.SSAFiller().fill(tsg)
+        ts_numpy = ts2.to_numpy()[:1024]
+        t_mu = np.mean(ts_numpy)
+        t_std = np.std(ts_numpy)
+        ts_numpy = (ts_numpy - t_mu) / t_std
+        ts_t = torch.from_numpy(ts_numpy).float()
+        ts_t.resize_(1,1,1024)
+        for i in range(20):
+            ts_tt = net(ts_t)
+            ts_tt = net(ts_t).detach().numpy()
+            ts_tt.resize(1024,1)
+            ts_tt = ts_tt * t_std + t_mu
+            ts_res = Sts(datas=ts_tt,indexs=ts2.index[:1024])
+            
+
+        plt.plot(tsl[:1024],label='raw')
+        plt.plot(ts2[:1024],label='gap')
+        plt.plot(ts_res,label='res') 
+        plt.legend()
+        plt.show()       
+        
+        break 
 
 if __name__ == "__main__":
+    # train_ = True
+    train_ = False
     tss = load_data()
-    tcn = TCN()
+    if train_:
+        ## train
+        tcn = TCN()
+        gln = GLN()
 
-    nets = [tcn]
-    for net in nets:
-        train(tss,net,torch.nn.MSELoss())
+        nets = [gln]
+        for net in nets:
+            train(tss,net,torch.nn.MSELoss())
+    else:
+        ## test
+        PATH = "models/gln/399.tar"
+        model = GLN()
+        checkpoint = torch.load(PATH)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval() 
+        test(tss, model)
 
 
 
