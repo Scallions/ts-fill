@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-09 20:54:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-19 15:36:49
+@LastEditTime : 2020-04-21 22:34:26
 @FilePath     : /gps-ts/scripts/train.py
 @Description  : 
 '''
@@ -50,14 +50,22 @@ class TssDataset(torch.utils.data.Dataset):
     def __init__(self, ts):
         super().__init__()
         self.data = ts.get_longest()
+        self.gap, _ = self.data.make_gap(30, cache_size=100)
+        self.gap = self.gap.fillna(self.gap.interpolate(method='slinear'))
         self.data = self.data.to_numpy()
-        self.mean = np.mean(self.data)
-        self.std = np.std(self.data)
-        self.data = (self.data - self.mean) / self.std
+        self.gap = self.gap.to_numpy()
         self.len = self.data.shape[0] - length - 1
 
     def __getitem__(self, index):
-        return self.data[index:index+length], self.data[index:index+length]
+        ts = self.data[index:index+length]
+        gap = self.data[index:index+length]
+        mean = np.mean(ts)
+        std = np.std(ts)
+        ts = (ts - mean) / std
+        mean = np.mean(gap)
+        std = np.std(gap)
+        gap = (gap - mean) / std
+        return ts, gap
 
     def __len__(self):
         return self.len
@@ -112,7 +120,7 @@ def train(tss, net, loss):
     if not loss:
         loss = torch.nn.MSELoss()
     
-    opt = torch.optim.Adam(net.parameters(), lr=0.001, weight_decay=0.1)
+    opt = torch.optim.Adam(net.parameters(), lr=0.00001, weight_decay=0.1)
 
     epochs = 400
 
@@ -123,7 +131,7 @@ def train(tss, net, loss):
         for ts in tss:
             dataset = TssDataset(ts)
             if dataset.len < 100: continue
-            train_loader = torch.utils.data.DataLoader(dataset,batch_size=30,drop_last=True)
+            train_loader = torch.utils.data.DataLoader(dataset,batch_size=30,drop_last=True,shuffle=True)
             for i, data in enumerate(train_loader):
                 x,y = data
                 y = y.float()
@@ -133,6 +141,11 @@ def train(tss, net, loss):
                 out_p = net(x)
                 out_p = out_p.squeeze(-1)
                 l = loss(out_p,y)
+                if torch.isnan(l).data.item() or l == 0 or l.data.item() == 0:
+                    raise Exception("Loss nan")
+                    opt.zero_grad()
+                    break
+
                 opt.zero_grad()
                 l.backward()
                 opt.step()
@@ -140,7 +153,7 @@ def train(tss, net, loss):
                     lm = l.data.item()
                 if i % 30 == 29:
                     print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
-            break
+            # break
         print(f"Epoch: {epoch}, Loss: {lm}")
         if checkpoint and epoch % 2 == 1:
             torch.save({
@@ -210,12 +223,14 @@ def test(tss, net):
         ts_numpy = (ts_numpy - t_mu) / t_std
         ts_t = torch.from_numpy(ts_numpy).float()
         ts_t.resize_(1,1,1024)
-        for i in range(20):
+        for i in range(1):
             ts_tt = net(ts_t)
-            ts_tt = net(ts_t).detach().numpy()
-            ts_tt.resize(1024,1)
-            ts_tt = ts_tt * t_std + t_mu
-            ts_res = Sts(datas=ts_tt,indexs=ts2.index[:1024])
+            ts_tt = net(ts_t).detach()
+            ts_t = ts_tt
+        ts_t = ts_t * t_std + t_mu
+        ts_t = ts_t.numpy()
+        ts_t.resize(1024)
+        ts_res = Sts(indexs=ts2.index[:1024], datas=ts_t)
             
 
         plt.plot(tsl[:1024],label='raw')
@@ -227,12 +242,15 @@ def test(tss, net):
         break 
 
 if __name__ == "__main__":
-    # train_ = True
-    train_ = False
+    logger.add("log/train_gln_{time}.log", rotation="500MB", encoding="utf-8", enqueue=True, compression="zip", retention="10 days", level="INFO")
+
+
+    train_ = True
+    # train_ = False
     tss = load_data()
     if train_:
         ## train
-        tcn = TCN()
+        # tcn = TCN()
         gln = GLN()
 
         nets = [gln]
@@ -240,7 +258,7 @@ if __name__ == "__main__":
             train(tss,net,torch.nn.MSELoss())
     else:
         ## test
-        PATH = "models/gln/399.tar"
+        PATH = "models/gan/9-G.tar"
         model = GLN()
         checkpoint = torch.load(PATH)
         model.load_state_dict(checkpoint['model_state_dict'])
