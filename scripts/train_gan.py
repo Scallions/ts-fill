@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-04-20 18:02:02
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-21 21:10:14
+@LastEditTime : 2020-04-21 22:39:22
 @FilePath     : /gps-ts/scripts/train_gan.py
 @Description  : 
 '''
@@ -19,6 +19,7 @@ from gln import GLN
 from ts.timeseries import SingleTs as Sts
 import ts.data as data
 import matplotlib.pyplot as plt
+from loguru import logger
 
 def load_data():
     """Load data in dir data 
@@ -194,7 +195,7 @@ def train(netD, netG, tss):
 
                 # Output training stats
                 if i % 20 == 0:
-                    print('[%d/%d][%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
+                    logger.info('[%d/%d][%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                         % (epoch, num_epochs, j, num_ts, i, len(dataloader),
                             errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
 
