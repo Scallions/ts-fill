@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-22 10:40:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-02 21:23:25
+@LastEditTime : 2020-04-22 13:20:58
 @FilePath     : /gps-ts/ts/ssa.py
 @Description  : 
 '''
@@ -215,7 +215,7 @@ def iter_MSSA_inner(X, sigma, K, M):
             sigma += 0.01 # 对 终止条件阈值进行调制，避免长时间无效迭代
             logger.debug("SSA inner sigma iter: {}",n+1)
             logger.debug("delta : {}",d)
-        if d < sigma or n > 1000:
+        if d < sigma or n > 200:
             #print(Xs[125],Xn[125])
             break
         Xs[np.isnan(X)] = Xn[np.isnan(X)] # 构建 新的 Xs 进行 SSA

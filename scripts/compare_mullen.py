@@ -1,9 +1,9 @@
 '''
 @Author       : Scallions
-@Date         : 2020-03-25 08:39:45
+@Date         : 2020-04-22 11:55:27
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-22 12:05:35
-@FilePath     : /gps-ts/scripts/compare-mults-fill.py
+@LastEditTime : 2020-04-22 13:13:40
+@FilePath     : /gps-ts/scripts/compare_mullen.py
 @Description  : 
 '''
 
@@ -53,28 +53,21 @@ if __name__ == "__main__":
     """genrel code for compare
     """
     result = {}    # result record different between gap sizes and filler functions
-    tss = load_data(epoch=10)
-    gap_sizes = [
-        1,
-        2,
-        3,
-        4,
+    len_sizes = [
+        # 3,
         5,
-        6,
-        10,
-        15,
-        30,
-        50
+        # 10,
+        # 15
         ]
 
     fillers = [
         # fill.MeanFiller,
         # fill.MedianFiller,
-        fill.LinearFiller, 
+        # fill.LinearFiller, 
         # fill.TimeFiller,
         # fill.QuadraticFiller,
         # fill.CubicFiller,
-        fill.SLinearFiller,
+        # fill.SLinearFiller,
         # fill.PolyFiller,
         # # fill.BarycentricFiller,
         # fill.SplineFiller,
@@ -83,14 +76,16 @@ if __name__ == "__main__":
         # fill.PiecewisePolynomialFiller,
         # fill.FromDerivativesFiller,
         # fill.AkimaFiller,
-        fill.RegEMFiller, 
-        # fill.MSSAFiller,
+        # fill.RegEMFiller, 
+        fill.MSSAFiller,
         ]
 
-    result = pd.DataFrame(columns=[filler.name for filler in fillers],index=gap_sizes+['time','gap_count','count'])
+    result = pd.DataFrame(columns=[filler.name for filler in fillers],index=len_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
-    for gap_size in gap_sizes:
-        val_tss = [(ts.get_longest(), *ts.get_longest().make_gap(gap_size, cache_size=30)) for ts in tss]
+    for len_size in len_sizes:
+        tss = load_data(lengths=len_size, epoch=30)
+        tsl = [ts.get_longest() for ts in tss]
+        val_tss = [(ts, *ts.make_gap(30)) for ts in tsl if ts.shape[0] > 200]
         
         for i,filler in enumerate(fillers):
             res = None
@@ -115,12 +110,12 @@ if __name__ == "__main__":
             res_mean = sum(counts * means) / sum(counts)
             
             end  = time.time()
-            result.loc[gap_size,filler.name] = res_mean
+            result.loc[len_size,filler.name] = res_mean
             result.loc['time', filler.name] = (end-start) + result.loc['time', filler.name]
             result.loc['count', filler.name] = count
             result.loc['gap_count', filler.name] = gap_count
             
-            logger.info(f"{filler.name} mean: {res_mean} time: {end-start:0.4f} gap: {gap_size}")
+            logger.info(f"{filler.name} mean: {res_mean} time: {end-start:0.4f} len: {len_size}")
             
 
-    result.to_csv("res/fill_mul_gapsize.csv")
+    result.to_csv("res/fill_mul_lensize.csv")
