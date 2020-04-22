@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-04-18 11:00:57
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-21 22:27:24
+@LastEditTime : 2020-04-22 09:11:15
 @FilePath     : /gps-ts/scripts/gln.py
 @Description  : 
 '''
@@ -36,7 +36,7 @@ class TemporalBlock(nn.Module):
         
         
         self.batch1 = nn.BatchNorm1d(n_outputs)
-        self.relu1 = nn.ReLU()
+        self.relu1 = nn.LeakyReLU()
         self.dropout1 = nn.Dropout(dropout)
 
         if encode:
@@ -49,13 +49,13 @@ class TemporalBlock(nn.Module):
                                             stride=stride, dilation=dilation))  
     
         self.batch2 = nn.BatchNorm1d(n_outputs)
-        self.relu2 = nn.ReLU()
+        self.relu2 = nn.LeakyReLU()
         self.dropout2 = nn.Dropout(dropout)
 
         self.net = nn.Sequential(self.conv1, self.relu1, self.batch1, self.dropout1,
                                  self.conv2, self.relu2, self.batch2, self.dropout2)
         self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
         self.init_weights()
 
     def init_weights(self):

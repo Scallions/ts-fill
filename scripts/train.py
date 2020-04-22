@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-09 20:54:10
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-21 22:34:26
+@LastEditTime : 2020-04-22 10:27:51
 @FilePath     : /gps-ts/scripts/train.py
 @Description  : 
 '''
@@ -128,33 +128,36 @@ def train(tss, net, loss):
 
     for epoch in range(epochs):
         lm = 0
+        datasets = []
         for ts in tss:
-            dataset = TssDataset(ts)
-            if dataset.len < 100: continue
-            train_loader = torch.utils.data.DataLoader(dataset,batch_size=30,drop_last=True,shuffle=True)
-            for i, data in enumerate(train_loader):
-                x,y = data
-                y = y.float()
-                x = x.float()
-                x = x.permute(0,2,1)
-                y = y.permute(0,2,1)
-                out_p = net(x)
-                out_p = out_p.squeeze(-1)
-                l = loss(out_p,y)
-                if torch.isnan(l).data.item() or l == 0 or l.data.item() == 0:
-                    raise Exception("Loss nan")
-                    opt.zero_grad()
-                    break
-
+            tsdataset = TssDataset(ts)
+            if tsdataset.len > 100:
+                datasets.append(tsdataset)
+        dataset = torch.utils.data.ConcatDataset(datasets)
+        train_loader = torch.utils.data.DataLoader(dataset,batch_size=30,drop_last=True,shuffle=True)
+        for i, data in enumerate(train_loader):
+            x,y = data
+            y = y.float()
+            x = x.float()
+            x = x.permute(0,2,1)
+            y = y.permute(0,2,1)
+            out_p = net(x)
+            out_p = out_p.squeeze(-1)
+            l = loss(out_p,y)
+            if torch.isnan(l).data.item() or l == 0 or l.data.item() == 0:
+                raise Exception("Loss nan")
                 opt.zero_grad()
-                l.backward()
-                opt.step()
-                if lm < l.data.item():
-                    lm = l.data.item()
-                if i % 30 == 29:
-                    print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
-            # break
-        print(f"Epoch: {epoch}, Loss: {lm}")
+                break
+
+            opt.zero_grad()
+            l.backward()
+            opt.step()
+            if lm < l.data.item():
+                lm = l.data.item()
+            if i % 30 == 29:
+                logger.info(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
+        # break
+        logger.info(f"Epoch: {epoch}, Loss: {lm}")
         if checkpoint and epoch % 2 == 1:
             torch.save({
                 'epoch': epoch,
@@ -183,25 +186,28 @@ def traintcn(tss, net, loss):
 
     for epoch in range(epochs):
         lm = 0
+        datasets = []
         for ts in tss:
-            dataset = TssDataset(ts)
-            if dataset.len < 100: continue
-            train_loader = torch.utils.data.DataLoader(dataset,batch_size=30)
-            for i, data in enumerate(train_loader):
-                x,y = data
-                y = y.float()
-                x = x.float()
-                x = x.permute(0,2,1)
-                out_p, _ = net(x)
-                out_p = out_p.squeeze(-1)
-                l = loss(out_p,y)
-                opt.zero_grad()
-                l.backward()
-                opt.step()
-                if lm < l.data.item():
-                    lm = l.data.item()
-                if i % 30 == 29:
-                    print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
+            tsdataset = TssDataset(ts)
+            if tsdataset.len > 100:
+                datasets.append(tsdataset)
+        dataset = torch.utils.data.ConcatDataset(datasets)
+        train_loader = torch.utils.data.DataLoader(dataset,batch_size=30)
+        for i, data in enumerate(train_loader):
+            x,y = data
+            y = y.float()
+            x = x.float()
+            x = x.permute(0,2,1)
+            out_p, _ = net(x)
+            out_p = out_p.squeeze(-1)
+            l = loss(out_p,y)
+            opt.zero_grad()
+            l.backward()
+            opt.step()
+            if lm < l.data.item():
+                lm = l.data.item()
+            if i % 30 == 29:
+                print(f"Epoch: {epoch}, Batch: {i}, Loss: {l.data.item()}")
         print(f"Epoch: {epoch}, Loss: {lm}")
         if checkpoint and epoch % 2 == 1:
             torch.save({
@@ -258,7 +264,7 @@ if __name__ == "__main__":
             train(tss,net,torch.nn.MSELoss())
     else:
         ## test
-        PATH = "models/gan/9-G.tar"
+        PATH = "models/gan/37-G.tar"
         model = GLN()
         checkpoint = torch.load(PATH)
         model.load_state_dict(checkpoint['model_state_dict'])
