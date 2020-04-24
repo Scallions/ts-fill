@@ -2,8 +2,8 @@
 @Author       : Scallions
 @Date         : 2020-04-20 18:02:02
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-24 09:36:16
-@FilePath     : /gps-ts/scripts/train_gan.py
+@LastEditTime : 2020-04-24 09:34:53
+@FilePath     : /gps-ts/scripts/train_mgan.py
 @Description  : 
 '''
 import os
@@ -15,25 +15,39 @@ import torch.nn as nn
 from torch.nn.utils import weight_norm
 import numpy as np
 
-from gln import GLN
-from ts.timeseries import SingleTs as Sts
+from mgln import MGLN
+from ts.timeseries import MulTs as Mts
 import ts.data as data
+import ts.tool as tool
 import matplotlib.pyplot as plt
 from loguru import logger
 
-def load_data():
-    """Load data in dir data 
+def load_data(lengths=6,epoch=6):
+    """load data
+    
+    Args:
+        lengths (int, optional): nums of mul ts. Defaults to 3.
     
     Returns:
-        List[TimeSeries]: a list of ts
+        [mts]: mts s
     """
-    tss = []
     dir_path = "./data/"
+    tss = []
     files = os.listdir(dir_path)
     for file_ in files:
         if ".cwu.igs14.csv" in file_:
-            tss.append(Sts(dir_path + file_,data.FileType.Cwu))
-    return tss
+            tss.append(Mts(dir_path + file_,data.FileType.Cwu))
+    nums = len(tss)
+    rtss = []
+
+    # data increase
+    import random
+    for j in range(epoch):
+        random.shuffle(tss)
+        for i in range(0,nums-lengths, lengths):
+            mts = tool.concat_multss(tss[i:i+lengths])
+            rtss.append(mts)
+    return rtss
 
 
 length = 1024
@@ -47,7 +61,11 @@ class TssDataset(torch.utils.data.Dataset):
     def __init__(self, ts):
         super().__init__()
         self.data = ts.get_longest()
-        self.gap, _ = self.data.make_gap(30, cache_size=100)
+        try:
+            self.gap, _, _ = self.data.make_gap(30, cache_size=100)
+        except:
+            self.len = -1
+            return
         self.gap = self.gap.fillna(self.gap.interpolate(method='slinear'))
         self.data = self.data.to_numpy()
         self.gap = self.gap.to_numpy()
@@ -56,11 +74,11 @@ class TssDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         ts = self.data[index:index+length]
         gap = self.data[index:index+length]
-        mean = np.mean(ts)
-        std = np.std(ts)
+        mean = np.mean(ts, axis=0)
+        std = np.std(ts, axis=0)
         ts = (ts - mean) / std
-        mean = np.mean(gap)
-        std = np.std(gap)
+        mean = np.mean(gap, axis=0)
+        std = np.std(gap, axis=0)
         gap = (gap - mean) / std
         return ts, gap
 
@@ -70,19 +88,19 @@ class TssDataset(torch.utils.data.Dataset):
 class DBlock(nn.Module):
     def __init__(self, n_inputs, n_outputs, kernel_size=3, stride=2, dilation=2, dropout=0.2, padding=2):
         super().__init__()
-        self.conv1 = weight_norm(nn.Conv1d(n_inputs, n_outputs, kernel_size,
-                                           stride=stride, padding=padding, dilation=dilation))
+        self.conv1 = weight_norm(nn.Conv2d(n_inputs, n_outputs, kernel_size,
+                                           stride=(stride,1), padding=(padding,1), dilation=(dilation,1)))
         self.relu1 = nn.LeakyReLU()
-        self.batch1 = nn.BatchNorm1d(n_outputs)
+        self.batch1 = nn.BatchNorm2d(n_outputs)
         self.dropout1 = nn.Dropout(dropout)
-        self.conv2 = weight_norm(nn.Conv1d(n_outputs, n_outputs, kernel_size,
-                                           stride=stride, padding=padding, dilation=dilation))
+        self.conv2 = weight_norm(nn.Conv2d(n_outputs, n_outputs, kernel_size,
+                                           stride=(stride,1), padding=(padding,1), dilation=(dilation,1)))
         self.relu2 = nn.LeakyReLU()
-        self.batch2 = nn.BatchNorm1d(n_outputs)
+        self.batch2 = nn.BatchNorm2d(n_outputs)
         self.dropout2 = nn.Dropout(dropout)
         self.net = nn.Sequential(self.conv1, self.relu1, self.batch1, self.dropout1,
                                  self.conv2, self.relu2, self.batch2, self.dropout2)
-        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1, stride=4) if n_inputs != n_outputs else None
+        self.downsample = nn.Conv2d(n_inputs, n_outputs, 1,stride=(4,1)) if n_inputs != n_outputs else None
         self.relu = nn.LeakyReLU()
 
     def forward(self, x):
@@ -104,7 +122,7 @@ class Dnet(torch.nn.Module):
         self.net = nn.Sequential(
             self.block1, self.block2, self.block3, self.block4
         )
-        self.conv1 = nn.Conv1d(8,1,4)
+        self.conv1 = nn.Conv2d(8,1,(4,9))
         self.sigmod = nn.Sigmoid()
         
     
@@ -112,7 +130,7 @@ class Dnet(torch.nn.Module):
         x = self.net(x)
         return self.sigmod(self.conv1(x))
 
-def train(netD, netG, tss):
+def train(netD, netG, tss, numts=3):
     num_epochs = 200
     lr = 0.0001
     beta1 = 0.5
@@ -144,6 +162,8 @@ def train(netD, netG, tss):
             
         # For each batch in the dataloader
         for i, (ts, gap) in enumerate(dataloader):
+            ts.resize_(30,1,1024,3*numts)
+            gap.resize_(30,1,1024,3*numts)
 
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -152,7 +172,7 @@ def train(netD, netG, tss):
             netD.zero_grad()
             # Format batch
             real_cpu = ts.to(device).float()
-            real_cpu = real_cpu.permute(0,2,1)
+            # real_cpu = real_cpu.permute(0,2,1)
             b_size = real_cpu.size(0)
             label = torch.full((b_size,), real_label, device=device).float()
             # Forward pass real batch through D
@@ -166,7 +186,7 @@ def train(netD, netG, tss):
             ## Train with all-fake batch
             # Generate batch of latent vectors
             noise = gap.to(device).float()
-            noise = noise.permute(0,2,1)
+            # noise = noise.permute(0,2,1)
             # Generate fake image batch with G
             fake = netG(noise)
             label.fill_(fake_label)
@@ -227,17 +247,18 @@ def train(netD, netG, tss):
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': netG.state_dict(),
-            }, f"models/gan/{epoch}-G.tar")   
+            }, f"models/mgan/{epoch}-G.tar")   
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': netD.state_dict(),
-            }, f"models/gan/{epoch}-D.tar")   
+            }, f"models/mgan/{epoch}-D.tar")   
 
 
 
 if __name__ == "__main__":
-    logger.add("log/train_gan_{time}.log", rotation="500MB", encoding="utf-8", enqueue=True, compression="zip", retention="10 days", level="INFO")
-    netg = GLN()
+    logger.add("log/train_mgan_{time}.log", rotation="500MB", encoding="utf-8", enqueue=True, compression="zip", retention="10 days", level="INFO")
+    netg = MGLN()
     netd = Dnet()
-    tss = load_data()
-    train(netd, netg, tss)
+    numts = 3
+    tss = load_data(lengths=numts)
+    train(netd, netg, tss, numts=numts)

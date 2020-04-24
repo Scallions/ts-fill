@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-28 19:50:25
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-17 19:26:04
+@LastEditTime : 2020-04-23 18:05:40
 @FilePath     : /gps-ts/scripts/compare-gapsize.py
 @Description  : gap size compare
 '''
@@ -54,16 +54,16 @@ if __name__ == "__main__":
         ]
 
     fillers = [
-        fill.TCNFiller
+        # fill.TCNFiller,
         # fill.MeanFiller, 
         # fill.MedianFiller,
         # fill.RollingMeanFiller,
         # fill.RollingMedianFiller,
-        # fill.LinearFiller, 
+        fill.LinearFiller, 
         # fill.TimeFiller,
         # fill.QuadraticFiller,
         # fill.CubicFiller,
-        # fill.SLinearFiller,
+        fill.SLinearFiller,
         # fill.PolyFiller,
         # fill.BarycentricFiller,
         # fill.SplineFiller,
@@ -73,6 +73,7 @@ if __name__ == "__main__":
         # fill.FromDerivativesFiller,
         # fill.AkimaFiller,
         # fill.FbFiller,
+        fill.GANFiller,
         # fill.SSAFiller
         ]
 
@@ -80,7 +81,16 @@ if __name__ == "__main__":
     result = pd.DataFrame(columns=[filler.name for filler in fillers],index=gap_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
     for gap_size in gap_sizes:
-        val_tss = [(ts.get_longest(), *ts.get_longest().make_gap(gap_size, cache_size=400)) for ts in tss]
+        val_tss = []
+        for ts in tss:
+            ts2 = ts.get_longest()
+            if ts2.shape[0] < 1030:continue
+            ts2 = Sts(datas=ts2[:1024], indexs=ts2.index[:1024])
+            # ts2.plot()
+            gapsize = 30
+            ts3,gidx = ts2.make_gap(gapsize=gapsize,cache_size=40)  
+            val_tss.append((ts2, ts3, gidx))         
+
         
         for i,filler in enumerate(fillers):
             logger.info(f"gap size: {gap_size}, filler: {filler.name}")

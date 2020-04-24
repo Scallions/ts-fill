@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-04-18 08:25:52
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-18 08:34:30
+@LastEditTime : 2020-04-23 17:57:26
 @FilePath     : /gps-ts/scripts/compare_one_gap.py
 @Description  : 
 '''
@@ -13,6 +13,7 @@ sys.path.append("./")
 
 import ts.tool as tool
 import ts.data as data
+import ts.timeseries as TS
 from ts.timeseries import SingleTs as Sts
 import ts.fill as fill
 from loguru import logger
@@ -59,6 +60,7 @@ def compare_one_gap():
     ts = Sts(filepath2,filetype=FileType.Cwu)
     logger.debug(ts.head())
     ts2 = ts.get_longest()
+    ts2 = TS.SingleTs(datas=ts2[:1024], indexs=ts2.index[:1024])
     # ts2.plot()
     gapsize = 30
     ts3,gidx = ts2.make_gap(gapsize=gapsize,cache_size=40)
@@ -68,9 +70,9 @@ def compare_one_gap():
     fillers = [
         fill.PolyFiller,
         fill.SLinearFiller, 
-        fill.SSAFiller,
+        # fill.SSAFiller,
         # fill.FbFiller
-        # fill.TCNFiller
+        fill.GANFiller
         ]
     for filler in fillers:
         ts4 = filler().fill(ts3)
@@ -100,7 +102,7 @@ def compare_mul_gap():
     fillers = [
         fill.PolyFiller,
         fill.SLinearFiller, 
-        fill.RegEMFiller
+        # fill.RegEMFiller
         # fill.SSAFiller,
         # fill.FbFiller
         # fill.TCNFiller
@@ -119,4 +121,4 @@ def compare_mul_gap():
 
 
 if __name__ == "__main__":
-    compare_mul_gap()
+    compare_one_gap()
