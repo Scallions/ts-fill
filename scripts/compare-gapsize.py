@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-28 19:50:25
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-23 18:05:40
+@LastEditTime : 2020-04-25 12:38:36
 @FilePath     : /gps-ts/scripts/compare-gapsize.py
 @Description  : gap size compare
 '''
@@ -88,7 +88,7 @@ if __name__ == "__main__":
             ts2 = Sts(datas=ts2[:1024], indexs=ts2.index[:1024])
             # ts2.plot()
             gapsize = 30
-            ts3,gidx = ts2.make_gap(gapsize=gapsize,cache_size=40)  
+            ts3,gidx = ts2.make_gap(gapsize=gapsize,cache_size=300, per=0.03)  
             val_tss.append((ts2, ts3, gidx))         
 
         
@@ -103,6 +103,8 @@ if __name__ == "__main__":
                 tsc = filler.fill(tsg)
                 this_res = tool.fill_res(tsc,tsl,gidx)
                 #logger.debug(this_res)
+                # if this_res.isna().any():
+                #     continue
                 if not isinstance(res, pd.DataFrame):
                     res = this_res
                 else:

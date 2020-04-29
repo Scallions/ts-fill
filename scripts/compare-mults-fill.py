@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-22 12:05:35
+@LastEditTime : 2020-04-24 10:05:54
 @FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -70,11 +70,11 @@ if __name__ == "__main__":
     fillers = [
         # fill.MeanFiller,
         # fill.MedianFiller,
-        fill.LinearFiller, 
+        # fill.LinearFiller, 
         # fill.TimeFiller,
         # fill.QuadraticFiller,
         # fill.CubicFiller,
-        fill.SLinearFiller,
+        # fill.SLinearFiller,
         # fill.PolyFiller,
         # # fill.BarycentricFiller,
         # fill.SplineFiller,
@@ -83,8 +83,8 @@ if __name__ == "__main__":
         # fill.PiecewisePolynomialFiller,
         # fill.FromDerivativesFiller,
         # fill.AkimaFiller,
-        fill.RegEMFiller, 
-        # fill.MSSAFiller,
+        # fill.RegEMFiller, 
+        fill.MSSAFiller,
         ]
 
     result = pd.DataFrame(columns=[filler.name for filler in fillers],index=gap_sizes+['time','gap_count','count'])

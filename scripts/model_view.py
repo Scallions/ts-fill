@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-04-21 20:48:38
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-24 09:30:42
+@LastEditTime : 2020-04-25 12:52:10
 @FilePath     : /gps-ts/scripts/model_view.py
 @Description  : 
 '''
@@ -75,11 +75,11 @@ def testm(tss, net):
         if tsl.shape[0] < 1050: continue
         ts_numpy = tsl.to_numpy()[:1024]
         ts = Mts(datas=ts_numpy, indexs=tsl.index[:1024], columns=tsl.columns)
-        tsg, gidx, cidx = ts.make_gap(30, cache_size=100, per=0.1)
+        tsg, gidx, cidx = ts.make_gap(30, cache_size=300, per=0.03)
         ts.columns = tsg.columns
         tssl = fill.SLinearFiller().fill(tsg)
         tsreg = fill.RegEMFiller().fill(tsg)
-        ts2 = tsreg
+        ts2 = tssl
         ts_numpy = ts2.to_numpy()
         t_mu = np.mean(ts_numpy, axis=0)
         t_std = np.std(ts_numpy, axis=0)
@@ -114,11 +114,11 @@ def testm(tss, net):
         res2 = tool.fill_res(tsreg, ts, gidx, cidx)
         logger.info(res)
         logger.info(res2)
-        plt.plot(ts.loc[:,cidx[0]], label='gap')
-        plt.plot(tssl.loc[:,cidx[0]], label="slinear")
-        plt.plot(tsreg.loc[:,cidx[0]], label='reg')
-        plt.plot(ts_r.loc[:,cidx[0]],label='res')
-        plt.plot(tsg.loc[:,cidx[0]])   
+        plt.plot(ts.loc[:,cidx[3]], label='gap')
+        plt.plot(tssl.loc[:,cidx[3]], label="slinear")
+        plt.plot(tsreg.loc[:,cidx[3]], label='reg')
+        plt.plot(ts_r.loc[:,cidx[3]],label='res')
+        plt.plot(tsg.loc[:,cidx[3]])   
         plt.legend()
         plt.show()
                
@@ -130,7 +130,7 @@ def test(tss, net):
         tsl = ts.get_longest()
         ts_numpy = tsl.to_numpy()[:1024]
         ts = Sts(datas=ts_numpy, indexs=tsl.index[:1024])
-        tsg,gidx = ts.make_gap(30, cache_size=100, per = 0.1)
+        tsg,gidx = ts.make_gap(30, cache_size=300, per = 0.03)
         ts2 = fill.SLinearFiller().fill(tsg)
         ts_numpy = ts2.to_numpy()
         t_mu = np.mean(ts_numpy)
@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     tss = load_mdata()
 
-    PATH = "models/mgan/93-G.tar"
+    PATH = "models/mgan/51-G.tar"
     model = MGLN()
     checkpoint = torch.load(PATH)
     model.load_state_dict(checkpoint['model_state_dict'])

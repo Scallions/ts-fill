@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-04-23 17:32:49
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-23 17:46:30
+@LastEditTime : 2020-04-25 12:22:35
 @FilePath     : /gps-ts/ts/ganfill.py
 @Description  : 
 '''
@@ -26,7 +26,7 @@ net = None
 def load_model():
     global net
     if net == None:
-        PATH = "models/gan/199-G.tar"
+        PATH = "models/gan/189-G.tar"
         net = GLN()
         checkpoint = torch.load(PATH)
         net.load_state_dict(checkpoint['model_state_dict'])
