@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-04-23 17:49:26
+@LastEditTime : 2020-06-06 18:23:52
 @LastEditors  : Scallions
 @FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -269,4 +269,14 @@ class GANFiller(Filler):
         import ts.ganfill as gan
         tsc = ts.complete()
         tc = gan.ganfill(tsc)
+        return tc
+
+
+class MLPFiller(Filler):
+    name = "MLP"
+    @staticmethod 
+    def fill(ts):
+        import ts.mlp as mlp
+        tsc = ts.complete()
+        tc = mlp.fill(tsc)
         return tc

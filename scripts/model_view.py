@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-04-21 20:48:38
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-25 12:52:10
+@LastEditTime : 2020-06-29 20:37:11
 @FilePath     : /gps-ts/scripts/model_view.py
 @Description  : 
 '''
@@ -27,22 +27,7 @@ from gln import GLN
 from mgln import MGLN
 import numpy as np
 
-
-def load_data():
-    """Load data in dir data 
-    
-    Returns:
-        List[TimeSeries]: a list of ts
-    """
-    tss = []
-    dir_path = "./data/test/"
-    files = os.listdir(dir_path)
-    for file_ in files:
-        if ".cwu.igs14.csv" in file_:
-            tss.append(Sts(dir_path + file_,data.FileType.Cwu))
-    return tss
-
-def load_mdata(lengths=3,epoch=2):
+def load_mdata(lengths=3,epoch=6):
     """load data
     
     Args:
@@ -57,6 +42,12 @@ def load_mdata(lengths=3,epoch=2):
     for file_ in files:
         if ".cwu.igs14.csv" in file_:
             tss.append(Mts(dir_path + file_,data.FileType.Cwu))
+    # dir_path = "./data/gps/"
+    # tss = []
+    # files = os.listdir(dir_path)
+    # for file_ in files:
+    #     if ".AN.tenv3" in file_:
+    #         tss.append(Mts(dir_path + file_,data.FileType.Ngl))
     nums = len(tss)
     rtss = []
 
@@ -65,20 +56,28 @@ def load_mdata(lengths=3,epoch=2):
     for j in range(epoch):
         random.shuffle(tss)
         for i in range(0,nums-lengths, lengths):
-            mts = tool.concat_multss(tss[i:i+lengths])
+            try:
+                mts = tool.concat_multss(tss[i:i+lengths])
+            except:
+                continue
             rtss.append(mts)
     return rtss
 
+
 def testm(tss, net):
     for ts in tss:
-        tsl = ts.get_longest()
+        try:
+            tsl = ts.get_longest()
+        except:
+            continue
         if tsl.shape[0] < 1050: continue
         ts_numpy = tsl.to_numpy()[:1024]
         ts = Mts(datas=ts_numpy, indexs=tsl.index[:1024], columns=tsl.columns)
-        tsg, gidx, cidx = ts.make_gap(30, cache_size=300, per=0.03)
+        tsg, gidx, cidx = ts.make_gap(100, cache_size=300, per=100/1024, c_i=False)
         ts.columns = tsg.columns
         tssl = fill.SLinearFiller().fill(tsg)
         tsreg = fill.RegEMFiller().fill(tsg)
+        tsmlp = fill.MLPFiller().fill(tsg)
         ts2 = tssl
         ts_numpy = ts2.to_numpy()
         t_mu = np.mean(ts_numpy, axis=0)
@@ -114,11 +113,12 @@ def testm(tss, net):
         res2 = tool.fill_res(tsreg, ts, gidx, cidx)
         logger.info(res)
         logger.info(res2)
-        plt.plot(ts.loc[:,cidx[3]], label='gap')
-        plt.plot(tssl.loc[:,cidx[3]], label="slinear")
-        plt.plot(tsreg.loc[:,cidx[3]], label='reg')
-        plt.plot(ts_r.loc[:,cidx[3]],label='res')
-        plt.plot(tsg.loc[:,cidx[3]])   
+        plt.plot(ts.loc[:,cidx[2]], label='gap')
+        plt.plot(tssl.loc[:,cidx[2]], label="slinear")
+        plt.plot(tsreg.loc[:,cidx[2]], label='reg')
+        plt.plot(tsmlp.loc[:,cidx[2]], label="mpl")
+        plt.plot(ts_r.loc[:,cidx[2]],label='gan')
+        plt.plot(tsg.loc[:,cidx[2]])   
         plt.legend()
         plt.show()
                
@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     tss = load_mdata()
 
-    PATH = "models/mgan/51-G.tar"
+    PATH = "models/mgan/93-G.tar"
     model = MGLN()
     checkpoint = torch.load(PATH)
     model.load_state_dict(checkpoint['model_state_dict'])

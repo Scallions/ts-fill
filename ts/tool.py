@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-02 18:15:42
+@LastEditTime : 2020-06-29 19:42:50
 @FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -32,8 +32,9 @@ def dy2jd(dy):
     return round(pyasl.jdcnv(ddt))
 
 def jd2datetime(jd):
-    return pd.Timestamp(julian.from_jd(jd, fmt='jd'))
-            
+    return pd.Timestamp(julian.from_jd(jd, fmt='jd').date())
+    # return pd.Timestamp(julian.from_jd(jd, fmt='jd'))
+
 def count_tss(tss):
     """Count ts and days in tss
     
@@ -61,12 +62,13 @@ def make_gap(ts, gap_size=3, per = 0.2, cache_size=0):
     Args:
         gap_size (int, optional): gap size will in the ts. Defaults to 3.
     """
-    # TODO: make gap not neighbor @scallions
     length = len(ts)
+    if length == 0:
+        raise Exception("ts length is zero")
     gap_count = int(length * per) # 20% gap
     gap_index = []
     while len(gap_index)*gap_size < gap_count:
-        r_index = random.randint(cache_size,length-gap_size)
+        r_index = random.randint(cache_size,length-gap_size-cache_size)
         flag = False
         for gap in gap_index:
             if abs(gap - r_index) <= gap_size:
@@ -102,7 +104,10 @@ def get_longest(ts):
         ts (df): ts with gap
     """
     gap_size = ts.gap_status()
-    max_i = gap_size.lengths.index(max(gap_size.lengths))
+    try:
+        max_i = gap_size.lengths.index(max(gap_size.lengths))
+    except:
+        raise Exception("no enough")
     tsl = ts.loc[gap_size.starts[max_i]:gap_size.starts[max_i]+pd.Timedelta(days=gap_size.lengths[max_i]-1)]
     return tsl
 
@@ -144,6 +149,8 @@ def concat_multss(tss):
     for ts in tss[1:]:
         r_idx = res.index
         t_idx = ts.index
-        a_idx = ts.index & r_idx 
+        a_idx = t_idx & r_idx
+        if len(a_idx) == 0:
+            raise Exception("non common idx") 
         res = pd.concat([res.loc[a_idx], ts.loc[a_idx]],axis=1)
     return type(tss[0]).from_df(res)

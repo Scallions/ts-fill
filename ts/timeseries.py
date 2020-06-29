@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-18 21:03:26
+@LastEditTime : 2020-06-29 19:27:50
 @FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -40,6 +40,12 @@ class SingleTs(TimeSeries):
             ts = data.cwu_loader(filepath)
             _data = ts.iloc[:,2].to_numpy()
             index = ts.index
+            columns = ['x']
+        # load ngl:
+        if filepath != "" and filetype == data.FileType.Ngl:
+            ts = data.ngl_loader(filepath)
+            _data = ts.iloc[:,2].to_numpy()
+            index = ts['jd']
             columns = ['x']
         # load sopac
         if filepath != "" and filetype == data.FileType.Sopac:
@@ -116,6 +122,12 @@ class MulTs(TimeSeries):
             index = ts.index
             columns = ['n','e','v']
 
+        if filepath != "" and filetype == data.FileType.Ngl:
+            ts = data.ngl_loader(filepath)
+            _data = ts.iloc[:,[0,1,2]].to_numpy()
+            index = ts['jd']
+            columns = ['n','e','v']
+
         # load custom data
         if filetype == data.FileType.Df and (isinstance(datas, MulTs) or isinstance(datas,pd.DataFrame)):
             _data = datas.values
@@ -171,7 +183,7 @@ class MulTs(TimeSeries):
                 start = indexs[i]
         return gaps
 
-    def make_gap(self,gapsize=3, per = 0.2, cache_size = 0):
+    def make_gap(self,gapsize=3, per = 0.2, cper = 0.5, cache_size = 0, c_i=True):
         """make gap in ts
         """
         gindex = tool.make_gap(self,gapsize, per, cache_size)
@@ -179,10 +191,21 @@ class MulTs(TimeSeries):
         import random
         c_idx = list(range(nums_c))
         c_s = self.columns 
-        c_idx = list(map(lambda x: str(x[0])+str(x[1]),zip(c_s,c_idx)))
+        c_idx = list(map(lambda x: str(x[0])+str(x[1]//3),zip(c_s,c_idx)))
         self.columns = c_idx
-        random.shuffle(c_idx)
-        c_idx = c_idx[0:(nums_c//2)]
+        if c_i == True:
+            random.shuffle(c_idx)
+            c_idx = c_idx[0:(int(cper*nums_c))]
+        else:
+            ts_num = nums_c // 3
+            t_num = int(ts_num * cper)
+            cache = list(range(ts_num))
+            random.shuffle(cache)
+            t_get = cache[0:t_num]
+            cache_idx = []
+            for i in t_get:
+                cache_idx.extend(c_idx[3*i:3*i+3])
+            c_idx = cache_idx
         tsg = self.copy()
         g = tsg.loc[gindex,c_idx] = None
         return MulTs(datas = tsg),gindex, c_idx

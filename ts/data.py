@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 12:58:11
 @LastEditors  : Scallions
-@LastEditTime : 2020-03-24 20:12:36
+@LastEditTime : 2020-06-29 10:51:18
 @FilePath     : /gps-ts/ts/data.py
 @Description  : some func used to process time series
 
@@ -17,6 +17,7 @@ class FileType(Enum):
     Cwu     = 1
     Sopac   = 2
     Df      = 3
+    Ngl     = 4
 
 def cwu_loader(filepath):
     """load data from cwu csv file
@@ -36,6 +37,15 @@ def sopac_loader(filepath):
     """
     logger.info("Read SOPAC data {}", filepath)
     df = pd.read_csv(filepath, header=None,sep=r"\s+", skiprows=15)
-    df['jd'] = df[0].apply(lambda x:tool.dy2jd(x))
+    df['jd'] = df[0].apply(lambda x: tool.jd2datetime(tool.dy2jd(x)))
     ts = df.iloc[:, [1,2,3,-1]]
     return ts
+
+def ngl_loader(filepath):
+    logger.info("Read NGL data {}", filepath)
+    df = pd.read_csv(filepath, sep="\s+")
+    df['jd'] = df["yyyy.yyyy"].apply(lambda x: tool.jd2datetime(tool.dy2jd(x)))
+    mask = ~df['jd'].duplicated()
+    df.iloc[:, [10,8,12]] *= 1000
+    ts = df.iloc[:, [10,8,12, -1]].loc[mask,:]
+    return ts 

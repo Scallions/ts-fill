@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-24 10:05:54
+@LastEditTime : 2020-06-29 19:24:17
 @FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -21,7 +21,7 @@ from loguru import logger
 import pandas as pd
 import time 
 
-def load_data(lengths=6,epoch=6):
+def load_data(lengths=3,epoch=6):
     """load data
     
     Args:
@@ -30,12 +30,12 @@ def load_data(lengths=6,epoch=6):
     Returns:
         [mts]: mts s
     """
-    dir_path = "./data/"
+    dir_path = "./data/gps/"
     tss = []
     files = os.listdir(dir_path)
     for file_ in files:
-        if ".cwu.igs14.csv" in file_:
-            tss.append(Mts(dir_path + file_,data.FileType.Cwu))
+        if ".AN.tenv3" in file_:
+            tss.append(Mts(dir_path + file_,data.FileType.Ngl))
     nums = len(tss)
     rtss = []
 
@@ -44,7 +44,10 @@ def load_data(lengths=6,epoch=6):
     for j in range(epoch):
         random.shuffle(tss)
         for i in range(0,nums-lengths, lengths):
-            mts = tool.concat_multss(tss[i:i+lengths])
+            try:
+                mts = tool.concat_multss(tss[i:i+lengths])
+            except:
+                continue
             rtss.append(mts)
     return rtss
 
@@ -53,14 +56,16 @@ if __name__ == "__main__":
     """genrel code for compare
     """
     result = {}    # result record different between gap sizes and filler functions
-    tss = load_data(epoch=10)
+    tss = load_data(lengths=9,epoch=60)
+    tsls = [ts.get_longest() for ts in tss if len(ts) > 500]
+    tsls = [tsl for tsl in tsls if len(tsl) > 400]
     gap_sizes = [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
+        # 1,
+        # 2,
+        # 3,
+        # 4,
+        # 5,
+        # 6,
         10,
         15,
         30,
@@ -74,7 +79,7 @@ if __name__ == "__main__":
         # fill.TimeFiller,
         # fill.QuadraticFiller,
         # fill.CubicFiller,
-        # fill.SLinearFiller,
+        fill.SLinearFiller,
         # fill.PolyFiller,
         # # fill.BarycentricFiller,
         # fill.SplineFiller,
@@ -83,14 +88,15 @@ if __name__ == "__main__":
         # fill.PiecewisePolynomialFiller,
         # fill.FromDerivativesFiller,
         # fill.AkimaFiller,
-        # fill.RegEMFiller, 
-        fill.MSSAFiller,
+        fill.RegEMFiller, 
+        # fill.MSSAFiller,
+        fill.MLPFiller,
         ]
 
     result = pd.DataFrame(columns=[filler.name for filler in fillers],index=gap_sizes+['time','gap_count','count'])
     result.loc['time'] = 0
     for gap_size in gap_sizes:
-        val_tss = [(ts.get_longest(), *ts.get_longest().make_gap(gap_size, cache_size=30)) for ts in tss]
+        val_tss = [(ts, *ts.make_gap(gap_size, cache_size=30, cper=0.5, c_i=False)) for ts in tsls]
         
         for i,filler in enumerate(fillers):
             res = None

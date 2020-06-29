@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-04-18 11:00:57
 @LastEditors  : Scallions
-@LastEditTime : 2020-04-22 09:11:15
+@LastEditTime : 2020-04-29 10:59:10
 @FilePath     : /gps-ts/scripts/gln.py
 @Description  : 
 '''
@@ -117,18 +117,18 @@ class TemporalConvNet(nn.Module):
         :param x: size of (Batch, input_channel, seq_len)
         :return: size of (Batch, output_channel, seq_len)
         """
-        midout = []
+        self.midout = []
         for name, midlayer in self.network._modules.items():
             
             x = midlayer(x)
             if int(name) % 4 == 3 and midin == None:
-                midout += [x]
+                self.midout += [x]
                 # print(x.shape)
             if midin != None and int(name) % 4 == 1 and name !='9':
                 t = midin[- int(name)//4 ]
                 x += t
         if midin == None:
-            return x, midout
+            return x
         # x = self.sigmoid(x)
         return x
 
@@ -139,5 +139,5 @@ class GLN(nn.Module):
         self.decoder = TemporalConvNet(4,[8,16,8,4,1], encode=False)
 
     def forward(self, x):
-        x, midout = self.encoder(x)
-        return self.decoder(x, midout)
+        x = self.encoder(x)
+        return self.decoder(x, self.encoder.midout)
