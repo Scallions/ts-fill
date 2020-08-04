@@ -2,32 +2,51 @@
 @Author       : Scallions
 @Date         : 2020-05-27 18:12:47
 @LastEditors  : Scallions
-@LastEditTime : 2020-06-29 08:32:09
+@LastEditTime : 2020-07-21 16:41:45
 @FilePath     : /gps-ts/test.py
 @Description  : 
 '''
 
-import ts.data as data
-import ts.tool as tool
-import ts.timeseries as tss
-import pandas as pd
+import torch
 import matplotlib.pyplot as plt
 
-if __name__ == "__main__":
-    filepath = "./data/gps/CAS1.AN.tenv3"
-    fp2 = "./data/BLAS.cwu.igs14.csv"
-    # df = pd.read_csv(filepath, sep="\s+")
-    # print(df["YYMMMDD"].astype('double').dtype)
+data = torch.randn(1,64,512,512)
 
-    ts = tss.SingleTs(filepath, filetype=data.FileType.Ngl)
-    ts = ts.get_longest()
-    ts2 = tss.SingleTs(fp2, data.FileType.Cwu)
-    ts2 = ts2.get_longest()
-    # ts = data.ngl_loader(filepath)
-    # print(ts.head())
-    # print(ts2.head())
-    print(ts.index.duplicated().sum())
-    # # # # tsg, gidx = ts.make_gap(gapsize=30)
-    # # # print(tsg.head())
-    # # tsg.plot()
-    # plt.show()
+import torch.nn as nn
+
+class SELayer(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(SELayer, self).__init__()
+        # self.avgpool = nn.Conv2d(channel, 1, 1)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channel, channel//reduction,bias=False), 
+            nn.ReLU(inplace=True),
+            nn.Linear(channel//reduction,channel, bias=False),
+            nn.Sigmoid()
+        )
+        self.bn = nn.BatchNorm2d(channel)
+
+    def forward(self, x):
+        b,c,h,w = x.size()
+        y = self.avgpool(x).view(b, c)
+        y = self.fc(y).view(b,c,1,1)
+        return self.bn(x * y.expand_as(x))
+
+senet = SELayer(channel=64)
+
+out = senet(data)
+
+print(data.shape, data.mean().item(), data.std().item())
+plt.hist(data.flatten())
+
+print(out.shape, out.mean().item(), out.std().item())
+
+plt.hist(out.detach().flatten())
+
+out = senet(out)
+print(out.shape, out.mean().item(), out.std().item())
+
+plt.hist(out.detach().flatten())
+
+plt.show()

@@ -1,20 +1,18 @@
-'''
+"""
 @Author       : Scallions
 @Date         : 2020-04-17 17:49:48
 @LastEditors  : Scallions
 @LastEditTime : 2020-04-18 11:07:26
 @FilePath     : /gps-ts/scripts/tcn.py
 @Description  : 
-'''
-
+"""
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
 
 
-
-
 class Chomp1d(nn.Module):
+
     def __init__(self, chomp_size):
         super(Chomp1d, self).__init__()
         self.chomp_size = chomp_size
@@ -27,7 +25,9 @@ class Chomp1d(nn.Module):
 
 
 class TemporalBlock(nn.Module):
-    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
+
+    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation,
+        padding, dropout=0.2):
         """
         相当于一个Residual block
 
@@ -41,21 +41,19 @@ class TemporalBlock(nn.Module):
         """
         super(TemporalBlock, self).__init__()
         self.conv1 = weight_norm(nn.Conv1d(n_inputs, n_outputs, kernel_size,
-                                           stride=stride, padding=padding, dilation=dilation))
-        # 经过conv1，输出的size其实是(Batch, input_channel, seq_len + padding)
-        self.chomp1 = Chomp1d(padding)  # 裁剪掉多出来的padding部分，维持输出时间步为seq_len
+            stride=stride, padding=padding, dilation=dilation))
+        self.chomp1 = Chomp1d(padding)
         self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout(dropout)
-
-        self.conv2 = weight_norm(nn.Conv1d(n_outputs, n_outputs, kernel_size,
-                                           stride=stride, padding=padding, dilation=dilation))
-        self.chomp2 = Chomp1d(padding)  #  裁剪掉多出来的padding部分，维持输出时间步为seq_len
+        self.conv2 = weight_norm(nn.Conv1d(n_outputs, n_outputs,
+            kernel_size, stride=stride, padding=padding, dilation=dilation))
+        self.chomp2 = Chomp1d(padding)
         self.relu2 = nn.ReLU()
         self.dropout2 = nn.Dropout(dropout)
-
-        self.net = nn.Sequential(self.conv1, self.chomp1, self.relu1, self.dropout1,
-                                 self.conv2, self.chomp2, self.relu2, self.dropout2)
-        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
+        self.net = nn.Sequential(self.conv1, self.chomp1, self.relu1, self.
+            dropout1, self.conv2, self.chomp2, self.relu2, self.dropout2)
+        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1
+            ) if n_inputs != n_outputs else None
         self.relu = nn.ReLU()
         self.init_weights()
 
@@ -81,6 +79,7 @@ class TemporalBlock(nn.Module):
 
 
 class TemporalConvNet(nn.Module):
+
     def __init__(self, num_inputs, num_channels, kernel_size=2, dropout=0.2):
         """
         TCN，目前paper给出的TCN结构很好的支持每个时刻为一个数的情况，即sequence结构，
@@ -96,12 +95,12 @@ class TemporalConvNet(nn.Module):
         layers = []
         num_levels = len(num_channels)
         for i in range(num_levels):
-            dilation_size = 2 ** i   # 膨胀系数：1，2，4，8……
-            in_channels = num_inputs if i == 0 else num_channels[i-1]  # 确定每一层的输入通道数
-            out_channels = num_channels[i]  # 确定每一层的输出通道数
-            layers += [TemporalBlock(in_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
-                                     padding=(kernel_size-1) * dilation_size, dropout=dropout)]
-
+            dilation_size = 2 ** i
+            in_channels = num_inputs if i == 0 else num_channels[i - 1]
+            out_channels = num_channels[i]
+            layers += [TemporalBlock(in_channels, out_channels, kernel_size,
+                stride=1, dilation=dilation_size, padding=(kernel_size - 1) *
+                dilation_size, dropout=dropout)]
         self.network = nn.Sequential(*layers)
 
     def forward(self, x):

@@ -1,9 +1,9 @@
 '''
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
-@LastEditors  : Scallions
-@LastEditTime : 2020-06-29 19:27:50
-@FilePath     : /gps-ts/ts/timeseries.py
+LastEditors  : Scallions
+LastEditTime : 2020-08-04 11:56:35
+FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
 import pandas as pd
@@ -185,6 +185,8 @@ class MulTs(TimeSeries):
 
     def make_gap(self,gapsize=3, per = 0.2, cper = 0.5, cache_size = 0, c_i=True):
         """make gap in ts
+
+        c_i: Ture 随机取可能取到同一个站点的， False 在站点之间随机
         """
         gindex = tool.make_gap(self,gapsize, per, cache_size)
         nums_c = self.shape[1]

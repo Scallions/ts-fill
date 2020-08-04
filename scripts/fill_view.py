@@ -1,9 +1,9 @@
 '''
 @Author       : Scallions
-@Date         : 2020-03-25 08:39:45
+@Date         : 2020-08-01 14:58:15
 LastEditors  : Scallions
-LastEditTime : 2020-08-04 15:35:45
-FilePath     : /gps-ts/scripts/compare-mults-fill.py
+LastEditTime : 2020-08-04 17:46:06
+FilePath     : /gps-ts/scripts/fill_view.py
 @Description  : 
 '''
 import os
@@ -17,6 +17,7 @@ import ts.fill as fill
 from loguru import logger
 import pandas as pd
 import time
+import matplotlib.pyplot as plt
 
 
 def load_data(lengths=3, epoch=6):
@@ -47,15 +48,14 @@ def load_data(lengths=3, epoch=6):
             rtss.append(mts)
     return rtss
 
-
 if __name__ == '__main__':
     """genrel code for compare
     """
     result = {}
 
     # 定义 数据集
-    clip_length = 500
-    tss = load_data(lengths=3, epoch=60)
+    clip_length = 800
+    tss = load_data(lengths=3, epoch=50)
     tsls = [ts.get_longest() for ts in tss if len(ts) > clip_length]
     tsls = [tsl for tsl in tsls if len(tsl) > clip_length]
     if len(tsls) == 0:
@@ -64,9 +64,9 @@ if __name__ == '__main__':
 
     # 定义比较的 gap size
     gap_sizes = [
-        50, 
-        100, 
-        200
+        # 50, 
+        # 100, 
+        300
         ]
 
     # 定义比较的filler 种类
@@ -76,40 +76,20 @@ if __name__ == '__main__':
         fill.MLPFiller
         ]
     
-    result = pd.DataFrame(columns=[filler.name for filler in fillers],
-        index=gap_sizes + ['time', 'gap_count', 'count']
-        )
-    result.loc['time'] = 0
+
+    pltsize = 2
+
     for gap_size in gap_sizes:
         val_tss = [(ts, *ts.make_gap(gap_size, cache_size=30, cper=0.5, c_i
             =False)) for ts in tsls]
-        for i, filler in enumerate(fillers):
-            res = None
-            start = time.time()
-            count = 0
-            gap_count = 0
-            for tsl, tsg, gidx, gridx in val_tss:
+        for tsl, tsg, gidx, gridx in val_tss:
+            plt.scatter(tsl.index, tsl[gridx[0]], label="raw", s=pltsize)
+            for i, filler in enumerate(fillers):
                 if len(tsl) < 380:
                     continue
                 tsc = filler.fill(tsg)
-                tsl.columns = tsc.columns
-                this_res = tool.fill_res(tsc, tsl, gidx, gridx)
-                if not isinstance(res, pd.DataFrame):
-                    res = this_res
-                else:
-                    res = pd.concat([res, this_res], axis=1)
-                count += len(tsl)
-                gap_count += len(gidx)
-            counts = res.loc['count'].values
-            means = res.loc['mean'].values
-            res_mean = sum(counts * means) / sum(counts)
-            end = time.time()
-            result.loc[gap_size, filler.name] = res_mean
-            result.loc['time', filler.name] = end - start + result.loc[
-                'time', filler.name]
-            result.loc['count', filler.name] = count
-            result.loc['gap_count', filler.name] = gap_count
-            logger.info(
-                f'{filler.name} mean: {res_mean} time: {end - start:0.4f} gap: {gap_size}'
-                )
-    result.to_csv('res/fill_mul_gapsize_an.csv')
+                plt.scatter(tsl.index, tsc[gridx[0]], label=filler.name, s=pltsize)
+            plt.scatter(tsl.index, tsg[gridx[0]], s=pltsize)
+            plt.legend()
+            plt.show()
+            break

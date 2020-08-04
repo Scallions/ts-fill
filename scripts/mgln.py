@@ -1,19 +1,20 @@
-'''
+"""
 @Author       : Scallions
 @Date         : 2020-04-18 11:00:57
 @LastEditors  : Scallions
 @LastEditTime : 2020-04-23 20:50:19
 @FilePath     : /gps-ts/scripts/mgln.py
 @Description  : 
-'''
+"""
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
 
 
-
 class TemporalBlock(nn.Module):
-    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2, encode=True):
+
+    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation,
+        padding, dropout=0.2, encode=True):
         """
         相当于一个Residual block
 
@@ -27,31 +28,31 @@ class TemporalBlock(nn.Module):
         """
         super(TemporalBlock, self).__init__()
         if encode:
-            self.conv1 = weight_norm(nn.Conv2d(n_inputs, n_outputs, kernel_size,
-                                            stride=(stride,1), padding=(padding,1), dilation=(dilation,1)))
+            self.conv1 = weight_norm(nn.Conv2d(n_inputs, n_outputs,
+                kernel_size, stride=(stride, 1), padding=(padding, 1),
+                dilation=(dilation, 1)))
         else:
-            self.conv1 = weight_norm(nn.ConvTranspose2d(n_inputs, n_outputs,kernel_size,
-                                            stride=(stride,1), padding=(padding,1), dilation=(dilation,1))) 
-        
-        
+            self.conv1 = weight_norm(nn.ConvTranspose2d(n_inputs, n_outputs,
+                kernel_size, stride=(stride, 1), padding=(padding, 1),
+                dilation=(dilation, 1)))
         self.batch1 = nn.BatchNorm2d(n_outputs)
         self.relu1 = nn.LeakyReLU()
         self.dropout1 = nn.Dropout(dropout)
-
         if encode:
-            self.conv2 = weight_norm(nn.Conv2d(n_outputs, n_outputs, kernel_size,
-                                            stride=(stride,1), padding=(padding,1), dilation=(dilation,1)))
+            self.conv2 = weight_norm(nn.Conv2d(n_outputs, n_outputs,
+                kernel_size, stride=(stride, 1), padding=(padding, 1),
+                dilation=(dilation, 1)))
         else:
-            self.conv2 = weight_norm(nn.ConvTranspose2d(n_outputs, n_outputs,kernel_size,
-                                            stride=(stride,1), padding=(padding,1), dilation=(dilation,1)))  
-    
+            self.conv2 = weight_norm(nn.ConvTranspose2d(n_outputs,
+                n_outputs, kernel_size, stride=(stride, 1), padding=(
+                padding, 1), dilation=(dilation, 1)))
         self.batch2 = nn.BatchNorm2d(n_outputs)
         self.relu2 = nn.LeakyReLU()
         self.dropout2 = nn.Dropout(dropout)
-
-        self.net = nn.Sequential(self.conv1, self.relu1, self.batch1, self.dropout1,
-                                 self.conv2, self.relu2, self.batch2, self.dropout2)
-        self.downsample = nn.Conv2d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
+        self.net = nn.Sequential(self.conv1, self.relu1, self.batch1, self.
+            dropout1, self.conv2, self.relu2, self.batch2, self.dropout2)
+        self.downsample = nn.Conv2d(n_inputs, n_outputs, 1
+            ) if n_inputs != n_outputs else None
         self.relu = nn.LeakyReLU()
         self.init_weights()
 
@@ -77,7 +78,9 @@ class TemporalBlock(nn.Module):
 
 
 class TemporalConvNet(nn.Module):
-    def __init__(self, num_inputs, num_channels, kernel_size=3, dropout=0.2, encode=True):
+
+    def __init__(self, num_inputs, num_channels, kernel_size=3, dropout=0.2,
+        encode=True):
         """
         TCN，目前paper给出的TCN结构很好的支持每个时刻为一个数的情况，即sequence结构，
         对于每个时刻为一个向量这种一维结构，勉强可以把向量拆成若干该时刻的输入通道，
@@ -92,18 +95,19 @@ class TemporalConvNet(nn.Module):
         layers = []
         num_levels = len(num_channels)
         for i in range(num_levels):
-            dilation_size = 2 ** i   # 膨胀系数：1，2，4，8……
-            in_channels = num_inputs if i == 0 else num_channels[i-1]  # 确定每一层的输入通道数
-            out_channels = num_channels[i]  # 确定每一层的输出通道数
-            layers += [TemporalBlock(in_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
-                                     padding=dilation_size, dropout=dropout, encode=encode)]
+            dilation_size = 2 ** i
+            in_channels = num_inputs if i == 0 else num_channels[i - 1]
+            out_channels = num_channels[i]
+            layers += [TemporalBlock(in_channels, out_channels, kernel_size,
+                stride=1, dilation=dilation_size, padding=dilation_size,
+                dropout=dropout, encode=encode)]
             if encode:
-                layers += [nn.MaxPool2d(kernel_size=(2,1))]
+                layers += [nn.MaxPool2d(kernel_size=(2, 1))]
             else:
-                layers += [nn.ConvTranspose2d(out_channels,out_channels,kernel_size,stride=(2,1), padding=(1,1),output_padding=(1,0))]
-
+                layers += [nn.ConvTranspose2d(out_channels, out_channels,
+                    kernel_size, stride=(2, 1), padding=(1, 1),
+                    output_padding=(1, 0))]
         self.network = nn.Sequential(*layers)
-        # self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, midin=None):
         """
@@ -116,24 +120,23 @@ class TemporalConvNet(nn.Module):
         """
         midout = []
         for name, midlayer in self.network._modules.items():
-            
             x = midlayer(x)
             if int(name) % 4 == 3 and midin == None:
                 midout += [x]
-                # print(x.shape)
-            if midin != None and int(name) % 4 == 1 and name !='9':
-                t = midin[- int(name)//4 ]
+            if midin != None and int(name) % 4 == 1 and name != '9':
+                t = midin[-int(name) // 4]
                 x += t
         if midin == None:
             return x, midout
-        # x = self.sigmoid(x)
         return x
 
+
 class MGLN(nn.Module):
+
     def __init__(self):
         super().__init__()
-        self.encoder = TemporalConvNet(1,[4,8,16,8,4])
-        self.decoder = TemporalConvNet(4,[8,16,8,4,1], encode=False)
+        self.encoder = TemporalConvNet(1, [4, 8, 16, 8, 4])
+        self.decoder = TemporalConvNet(4, [8, 16, 8, 4, 1], encode=False)
 
     def forward(self, x):
         x, midout = self.encoder(x)
