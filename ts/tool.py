@@ -1,9 +1,9 @@
 '''
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
-@LastEditors  : Scallions
-@LastEditTime : 2020-06-29 19:42:50
-@FilePath     : /gps-ts/ts/tool.py
+LastEditors  : Scallions
+LastEditTime : 2020-08-23 09:09:38
+FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
 from __future__ import division, print_function

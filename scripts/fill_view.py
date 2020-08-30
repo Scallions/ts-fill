@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-08-01 14:58:15
 LastEditors  : Scallions
-LastEditTime : 2020-08-04 17:46:06
+LastEditTime : 2020-08-22 11:43:02
 FilePath     : /gps-ts/scripts/fill_view.py
 @Description  : 
 '''
@@ -66,12 +66,22 @@ if __name__ == '__main__':
     gap_sizes = [
         # 50, 
         # 100, 
-        300
+        10
         ]
 
     # 定义比较的filler 种类
     fillers = [
         fill.SLinearFiller, 
+        # fill.CubicFiller,
+        # fill.PiecewisePolynomialFiller,
+        # fill.FromDerivativesFiller,
+        # fill.FromDerivativesFiller,
+        # fill.QuadraticFiller,
+        # fill.AkimaFiller,
+        # fill.SplineFiller,
+        # fill.BarycentricFiller,
+        # fill.KroghFiller,
+        fill.PchipFiller,
         fill.RegEMFiller, 
         fill.MLPFiller
         ]
@@ -80,8 +90,8 @@ if __name__ == '__main__':
     pltsize = 2
 
     for gap_size in gap_sizes:
-        val_tss = [(ts, *ts.make_gap(gap_size, cache_size=30, cper=0.5, c_i
-            =False)) for ts in tsls]
+        val_tss = [(ts, *ts.make_gap(gap_size, cache_size=200, cper=0.5, c_i
+            =False, )) for ts in tsls]
         for tsl, tsg, gidx, gridx in val_tss:
             plt.scatter(tsl.index, tsl[gridx[0]], label="raw", s=pltsize)
             for i, filler in enumerate(fillers):

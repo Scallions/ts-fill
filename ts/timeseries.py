@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 LastEditors  : Scallions
-LastEditTime : 2020-08-04 11:56:35
+LastEditTime : 2020-08-23 10:16:37
 FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -120,13 +120,13 @@ class MulTs(TimeSeries):
             ts = data.cwu_loader(filepath)
             _data = ts.iloc[:,[0,1,2]].to_numpy()
             index = ts.index
-            columns = ['n','e','v']
+            columns = ['n','e','u']
 
         if filepath != "" and filetype == data.FileType.Ngl:
             ts = data.ngl_loader(filepath)
             _data = ts.iloc[:,[0,1,2]].to_numpy()
             index = ts['jd']
-            columns = ['n','e','v']
+            columns = ['n','e','u']
 
         # load custom data
         if filetype == data.FileType.Df and (isinstance(datas, MulTs) or isinstance(datas,pd.DataFrame)):
@@ -183,7 +183,7 @@ class MulTs(TimeSeries):
                 start = indexs[i]
         return gaps
 
-    def make_gap(self,gapsize=3, per = 0.2, cper = 0.5, cache_size = 0, c_i=True):
+    def make_gap(self,gapsize=3, per = 0.2, cper = 0.5, cache_size = 0, c_i=True, c_ii=None):
         """make gap in ts
 
         c_i: Ture 随机取可能取到同一个站点的， False 在站点之间随机
@@ -208,6 +208,8 @@ class MulTs(TimeSeries):
             for i in t_get:
                 cache_idx.extend(c_idx[3*i:3*i+3])
             c_idx = cache_idx
+        if c_ii != None:
+            c_idx = self.columns[:3]
         tsg = self.copy()
         g = tsg.loc[gindex,c_idx] = None
         return MulTs(datas = tsg),gindex, c_idx

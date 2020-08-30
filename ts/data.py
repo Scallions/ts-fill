@@ -1,9 +1,9 @@
 '''
 @Author       : Scallions
 @Date         : 2020-02-05 12:58:11
-@LastEditors  : Scallions
-@LastEditTime : 2020-06-29 10:51:18
-@FilePath     : /gps-ts/ts/data.py
+LastEditors  : Scallions
+LastEditTime : 2020-08-23 09:42:04
+FilePath     : /gps-ts/ts/data.py
 @Description  : some func used to process time series
 
 ts data is a dataframe contained columns such as [time:Datatime,jd:Float,N:Float,E:Float,U:Float,]
@@ -47,5 +47,5 @@ def ngl_loader(filepath):
     df['jd'] = df["yyyy.yyyy"].apply(lambda x: tool.jd2datetime(tool.dy2jd(x)))
     mask = ~df['jd'].duplicated()
     df.iloc[:, [10,8,12]] *= 1000
-    ts = df.iloc[:, [10,8,12, -1]].loc[mask,:]
+    ts = df.iloc[:, [10,8,12, -1]].loc[mask,:] # N E U
     return ts 
