@@ -2,12 +2,14 @@
 @Author       : Scallions
 @Date         : 2020-05-17 11:19:12
 LastEditors  : Scallions
-LastEditTime : 2020-08-04 15:12:40
+LastEditTime : 2020-10-09 15:11:56
 FilePath     : /gps-ts/ts/mlp.py
 @Description  : 
 '''
 import torch
+import torch.nn as nn
 import pandas as pd
+import numpy as np
 
 class MyDataset(torch.utils.data.Dataset):
     def __init__(self, data, range_):
@@ -23,8 +25,26 @@ class MyDataset(torch.utils.data.Dataset):
         
     def __getitem__(self, index):
         idx = self.idxs[index]
-        return self.tsd.loc[idx-pd.Timedelta(days=self.range_):idx+pd.Timedelta(days=self.range_),:].to_numpy().flatten(), self.tsg.loc[idx, :].to_numpy()
     
+        # return self.tsd.loc[idx-pd.Timedelta(days=self.range_):idx+pd.Timedelta(days=self.range_),:].to_numpy().flatten(), self.tsg.loc[idx, :].to_numpy()
+        return np.expand_dims(self.tsd.loc[idx-pd.Timedelta(days=self.range_):idx+pd.Timedelta(days=self.range_),:].to_numpy().transpose(),0), self.tsg.loc[idx, :].to_numpy()
+class SELayer(torch.nn.Module):
+    def __init__(self, in_channel):
+        super().__init__()
+        self.fc = nn.Sequential( 
+            torch.nn.Linear(in_channel, in_channel//2, bias=False),
+            nn.ReLU(inplace=True),
+            torch.nn.Linear(in_channel//2, in_channel, bias=False),
+            nn.Sigmoid()
+        )
+        self.avgpool = nn.AdaptiveMaxPool1d(1)
+
+    def forward(self,x):
+        b,l = x.size()
+        y = self.avgpool(x.view(l,1,b)).view(1,l)
+        y = self.fc(y)
+        return x * y.expand_as(x)
+        
 
 def fill(ts, range_=10):
     """[summary]
@@ -80,10 +100,18 @@ def make_net(gap_idx, range_):
     hidden_num2 = int(hidden2*len_gap)
 
     model = torch.nn.Sequential()
-    model.add_module('l1',torch.nn.Linear(len_data*(2*range_+1), hidden_num))
+    model.add_module('conv1', nn.Conv2d(1,2,3,padding=1))
+    model.add_module('cac1', r)
+    model.add_module('conv2', nn.Conv2d(2,4,3,padding=1))
+    model.add_module('cac2', r)
+    model.add_module('cbn_1', nn.BatchNorm2d(4))
+    model.add_module('flatten', nn.Flatten())
+    model.add_module('l1',torch.nn.Linear(len_data*(2*range_+1)*4, hidden_num))
+    model.add_module('att1', SELayer(hidden_num))
     model.add_module('bn1', torch.nn.BatchNorm1d(hidden_num))
     model.add_module('ac1',r)
     model.add_module('l2',torch.nn.Linear(hidden_num, hidden_num2))
+    model.add_module('att2', SELayer(hidden_num2))
     model.add_module('bn2', torch.nn.BatchNorm1d(hidden_num2))
     model.add_module('ac2',r)
     model.add_module('l3', torch.nn.Linear(hidden_num2,len_gap))
@@ -92,7 +120,7 @@ def make_net(gap_idx, range_):
 
 def train_net(net, dataloader, range_):
     # """@nni.variable(nni.choice(10,20,30,50), name=epochs)"""
-    epochs = 80
+    epochs = 200
     opt = torch.optim.Adam(net.parameters(), lr=0.001)
 
     l1 = torch.nn.MSELoss()
@@ -122,7 +150,8 @@ def complete(tsc, model, range_):
         if tsc.iloc[i,:].isna().any() == False: 
             continue        
         x = tsc.iloc[i-range_:i+range_+1,:].loc[:,gap_idx == False]
-        x = torch.from_numpy(x.to_numpy()).float().flatten().unsqueeze(0)
+        # x = torch.from_numpy(x.to_numpy()).float().flatten().unsqueeze(0)
+        x = torch.from_numpy(x.to_numpy().transpose()).float().unsqueeze(0).unsqueeze(0)
         model.eval()
         out = model(x)
         tsc.iloc[i,:].loc[gap_idx==True] = out.detach().numpy().squeeze(0)

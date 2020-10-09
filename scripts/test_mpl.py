@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-06-05 15:06:13
 LastEditors  : Scallions
-LastEditTime : 2020-08-04 11:15:19
+LastEditTime : 2020-10-09 14:23:13
 FilePath     : /gps-ts/scripts/test_mpl.py
 @Description  : 
 '''
@@ -48,8 +48,13 @@ if __name__ == '__main__':
     tss = load_data(lengths=3, epoch=1)
     mts = tss[0]
     tsl = mts.get_longest()
-    tsg, _, _ = tsl.make_gap(gapsize=30, cache_size=200, per=0.03)
-    tsc = mlp.fill(tsg)
+    tsg, gidx, gridx = tsl.make_gap(gapsize=30, cache_size=200, per=0.03, c_i=False, cper=0.5)
+    trends, noises = tool.remove_trend(tsl)
+    noises.loc[gidx, gridx] = None
+    noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+                                
+    tsc = mlp.fill(noises)
+    tsc = trends + tsc
     tsg.plot()
     tsc.plot()
     plt.show()

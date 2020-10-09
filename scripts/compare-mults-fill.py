@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 LastEditors  : Scallions
-LastEditTime : 2020-08-04 15:35:45
+LastEditTime : 2020-10-05 20:17:13
 FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -64,16 +64,29 @@ if __name__ == '__main__':
 
     # 定义比较的 gap size
     gap_sizes = [
-        50, 
-        100, 
-        200
+        3, 
+        5, 
+        7,
+        20,
+        30,
+        180
         ]
 
     # 定义比较的filler 种类
     fillers = [
-        fill.SLinearFiller, 
         fill.RegEMFiller, 
-        fill.MLPFiller
+        fill.SLinearFiller, # 一阶样条插值
+        fill.MLPFiller,
+        fill.PolyFiller, # 二阶多项式插值
+        # fill.PiecewisePolynomialFiller, 
+        # fill.KroghFiller, # overflow
+        # fill.QuadraticFiller, # 二次
+        fill.AkimaFiller,
+        fill.SplineFiller, # 三次样条
+        # fill.BarycentricFiller, # overflow
+        # fill.FromDerivativesFiller,
+        fill.PchipFiller, # 三阶 hermite 插值
+        # fill.SSAFiller,
         ]
     
     result = pd.DataFrame(columns=[filler.name for filler in fillers],
@@ -91,7 +104,14 @@ if __name__ == '__main__':
             for tsl, tsg, gidx, gridx in val_tss:
                 if len(tsl) < 380:
                     continue
-                tsc = filler.fill(tsg)
+                # 去趋势
+                trends, noises = tool.remove_trend(tsl)
+                noises.loc[gidx, gridx] = None
+                noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+                                
+                tsc = filler.fill(noises)
+                tsc = trends + tsc
+                tsc = Mts(datas=tsc,indexs=tsc.index, columns=tsc.columns)
                 tsl.columns = tsc.columns
                 this_res = tool.fill_res(tsc, tsl, gidx, gridx)
                 if not isinstance(res, pd.DataFrame):

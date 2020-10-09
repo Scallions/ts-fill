@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 LastEditors  : Scallions
-LastEditTime : 2020-08-23 09:09:38
+LastEditTime : 2020-10-05 17:01:50
 FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -154,3 +154,38 @@ def concat_multss(tss):
             raise Exception("non common idx") 
         res = pd.concat([res.loc[a_idx], ts.loc[a_idx]],axis=1)
     return type(tss[0]).from_df(res)
+
+def remove_trend(mts):
+    """从时间序列中提取周年项，和残差
+
+    Args:
+        mts ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    def trend_of_ts(ts):
+        length = len(ts)
+        x = np.array(list(range(length))).reshape((length,1))
+        sinx = np.sin(x*np.pi*2/365)
+        sin2x = np.sin(2*x*np.pi*2/365)
+        ones = np.ones((length,1))
+        data = np.hstack((ones, x, sinx, sin2x))
+        b = np.dot(np.dot(np.linalg.inv(np.dot(data.transpose(), data)), data.transpose()), ts)
+        ts_hat = np.dot(data, b)
+        noise = ts - ts_hat 
+        trend = pd.DataFrame(data=ts_hat,index=mts.index, columns=[ts.name])
+        noise = pd.DataFrame(data=noise,index=mts.index, columns=[ts.name])
+        return trend, noise
+    trends = None
+    noise = None 
+    for ts in mts:
+        trend, noise = trend_of_ts(mts[ts])
+        if trends is None:
+            trends = trend
+            noises = noise
+        else:
+            trends = pd.concat([trends, trend],axis=1)
+            noises = pd.concat([noises, noise],axis=1)
+    
+    return trends, noises

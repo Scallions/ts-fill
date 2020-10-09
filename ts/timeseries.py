@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 LastEditors  : Scallions
-LastEditTime : 2020-08-23 10:16:37
+LastEditTime : 2020-10-05 17:10:58
 FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -132,7 +132,7 @@ class MulTs(TimeSeries):
         if filetype == data.FileType.Df and (isinstance(datas, MulTs) or isinstance(datas,pd.DataFrame)):
             _data = datas.values
             index = datas.index
-            if columns == None:
+            if columns is None:
                 columns = datas.columns
 
         if filetype == data.FileType.Df and isinstance(datas, np.ndarray):

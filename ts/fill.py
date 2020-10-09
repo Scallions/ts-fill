@@ -1,9 +1,9 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-@LastEditTime : 2020-06-06 18:23:52
-@LastEditors  : Scallions
-@FilePath     : /gps-ts/ts/fill.py
+LastEditTime : 2020-10-04 10:37:27
+LastEditors  : Scallions
+FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
 '''
 from fbprophet import Prophet
@@ -142,6 +142,7 @@ class TimeFiller(Filler):
         return tss
 
 class QuadraticFiller(Filler):
+    # 二次
     name = "Quadratic"
     @staticmethod
     def fill(ts):
@@ -180,7 +181,7 @@ class AkimaFiller(Filler):
 class PolyFiller(Filler):
     name = "Poly"
     @staticmethod
-    def fill(ts, order=3):
+    def fill(ts, order=2):
         tsc = ts.complete()
         tc = tsc.fillna(tsc.interpolate(method='polynomial', order=order))
         tss = type(ts)(datas = tc, indexs=tsc.index)
