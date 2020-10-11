@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 LastEditors  : Scallions
-LastEditTime : 2020-10-05 20:17:13
+LastEditTime : 2020-10-11 14:15:46
 FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -64,30 +64,60 @@ if __name__ == '__main__':
 
     # 定义比较的 gap size
     gap_sizes = [
-        3, 
-        5, 
+        # 3, 
+        # 5, 
         7,
-        20,
+        # 20,
         30,
         180
         ]
 
     # 定义比较的filler 种类
     fillers = [
-        fill.RegEMFiller, 
-        fill.SLinearFiller, # 一阶样条插值
-        fill.MLPFiller,
-        fill.PolyFiller, # 二阶多项式插值
+        ### imputena
+        fill.MICEFiller,
+
+        ### missingpy
+        fill.MissForestFiller,
+
+        ### miceforest
+        fill.MiceForestFiller,
+
+        ### para
+        # fill.RandomForestFiller,
+
+        ### magic
+        # fill.MagicFiller,
+        
+        ### fancyimpute
+        fill.KNNFiller,
+        # fill.SoftImputeFiller,
+        # fill.IterativeSVDFiller,
+        fill.IterativeImputerFiller,
+        fill.MatrixFactorizationFiller,
+        # fill.BiScalerFiller,
+        # fill.NuclearNormMinimizationFiller,
+
+        ### scipy
+        # fill.SLinearFiller, # 一阶样条插值
+        # fill.SplineFiller, # 三次样条
+        # fill.AkimaFiller,
+        # fill.PolyFiller, # 二阶多项式插值÷
         # fill.PiecewisePolynomialFiller, 
         # fill.KroghFiller, # overflow
         # fill.QuadraticFiller, # 二次
-        fill.AkimaFiller,
-        fill.SplineFiller, # 三次样条
         # fill.BarycentricFiller, # overflow
         # fill.FromDerivativesFiller,
-        fill.PchipFiller, # 三阶 hermite 插值
+        # fill.PchipFiller, # 三阶 hermite 插值
+
+        ### matlab
+        fill.RegEMFiller, 
+
+        ### self
+        fill.MLPFiller,
+        # fill.ConvFiller,
         # fill.SSAFiller,
-        ]
+    ]
     
     result = pd.DataFrame(columns=[filler.name for filler in fillers],
         index=gap_sizes + ['time', 'gap_count', 'count']
@@ -105,13 +135,13 @@ if __name__ == '__main__':
                 if len(tsl) < 380:
                     continue
                 # 去趋势
-                trends, noises = tool.remove_trend(tsl)
-                noises.loc[gidx, gridx] = None
-                noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
-                                
-                tsc = filler.fill(noises)
-                tsc = trends + tsc
-                tsc = Mts(datas=tsc,indexs=tsc.index, columns=tsc.columns)
+                # trends, noises = tool.remove_trend(tsl)
+                # noises.loc[gidx, gridx] = None
+                # noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+                # tsc = filler.fill(noises)
+                # tsc = trends + tsc
+                # tsc = Mts(datas=tsc,indexs=tsc.index, columns=tsc.columns)
+                tsc = filler.fill(tsg)
                 tsl.columns = tsc.columns
                 this_res = tool.fill_res(tsc, tsl, gidx, gridx)
                 if not isinstance(res, pd.DataFrame):

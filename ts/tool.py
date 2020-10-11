@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 LastEditors  : Scallions
-LastEditTime : 2020-10-05 17:01:50
+LastEditTime : 2020-10-10 22:32:26
 FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -56,7 +56,7 @@ def delta(X, X_):
     """
     return np.mean(np.square(X - X_))
 
-def make_gap(ts, gap_size=3, per = 0.2, cache_size=0):
+def make_gap(ts, gmax=None, gap_size=3, per = 0.2, cache_size=0):
     """make gap idx
     
     Args:
@@ -65,7 +65,10 @@ def make_gap(ts, gap_size=3, per = 0.2, cache_size=0):
     length = len(ts)
     if length == 0:
         raise Exception("ts length is zero")
-    gap_count = int(length * per) # 20% gap
+    if per:
+        gap_count = int(length * per) # 20% gap
+    if gmax:
+        gap_count = gmax
     gap_index = []
     while len(gap_index)*gap_size < gap_count:
         r_index = random.randint(cache_size,length-gap_size-cache_size)

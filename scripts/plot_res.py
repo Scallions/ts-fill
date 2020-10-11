@@ -1,11 +1,12 @@
 '''
 Author       : Scallions
-Date         : 2020-08-29 16:05:38
+Date         : 2020-10-10 22:11:57
 LastEditors  : Scallions
-LastEditTime : 2020-10-11 14:13:55
-FilePath     : /gps-ts/scripts/res_analysis.py
+LastEditTime : 2020-10-11 14:09:59
+FilePath     : /gps-ts/scripts/plot_res.py
 Description  : 
 '''
+
 import os
 import sys
 sys.path.append('./')
@@ -67,6 +68,8 @@ fillers = [
     # fill.SSAFiller,
 ]
 names = ['raw'] + [filler.name for filler in fillers]
+# names += ['mice']
+# names += ['r']
 
 ind = pd.read_csv("./res/raw.csv", index_col="jd",parse_dates=True).index
 data = {}
@@ -81,56 +84,30 @@ c = np.where(np.any(a, axis=0))
 # print(c)
 
 
-# ind = ind[b[0][0]:b[0][-1]]
-ind = ind[b[0]]
+# # ind = ind[b[0][0]:b[0][-1]]
+# ind = ind[b[0]]
 
-for k,v in data.items():
-    # data[k] = v[b[0][0]:b[0][-1],:]
-    data[k] = v[b[0],:]
+# for k,v in data.items():
+#     # data[k] = v[b[0][0]:b[0][-1],:]
+#     data[k] = v[b[0],:]
 
 dd = 2
-
-## 相关系数
-raw_s = pd.Series(data["raw"][:,c[0][dd]])
-method = "pearson"
-print("相关系数: ")
-for name in names[1:]:
-    ts_s = pd.Series(data[name][:,c[0][dd]])
-    r = raw_s.corr(ts_s, method=method)
-    r2 = raw_s.corr(ts_s,method='spearman')
-    print(f"{name}: ", r, r2)
-# regem_s = pd.Series(regem[:,c[0][dd]])
-# mlp_s = pd.Series(mlp[:,c[0][dd]])
-# r1 = raw_s.corr(regem_s,method=method)
-# r2 = raw_s.corr(mlp_s, method=method)
-# print("相关系数",r1,r2)
-
-fig, subs = plt.subplots(len(names),1, sharex=True)
+pltsize = 1
+cache = 100
+fig, subs = plt.subplots(len(names)-1,1, sharex=True)
 i = 0
+names = list(data.keys())
 for k, x in data.items():
 
-
-    # 残差
-
-    d = x[:,c[0][dd]]-data["raw"][:,c[0][dd]]
-    # if i == 0:
-    #     subs[i].scatter(ind, data["raw"][:,c[0][dd]], s=1)
-    #     subs[i].set_ylabel("Raw"+"(mm)")
-    #     i += 1
-    #     continue
-    print(f"{names[i]} mean, std, mae: ",d.mean(), d.std(), np.abs(d).mean())
-    
     # 绘图
-    subs[i].scatter(data["raw"][:,c[0][dd]], x[:,c[0][dd]], s=1)
-    # if dd == 2:
-    #     ymax = 20
-    # else:
-    #     ymax = 5
-    # subs[i].set_ylim(-ymax,ymax)
-    subs[i].set_ylabel(names[i]+"(mm)")
 
-    
+    if k == 'raw':
+        continue
+    subs[i].scatter(ind[b[0][0]-cache:b[0][-1]+cache], data["raw"][b[0][0]-cache:b[0][-1]+cache,c[0][dd]], s=pltsize, c="black")
+    subs[i].scatter(ind[b[0]], x[b[0],c[0][dd]], s=pltsize, c="red") 
+    subs[i].set_ylabel(names[i+1]+"(mm)")
     i += 1
+    
 
 
 plt.show()

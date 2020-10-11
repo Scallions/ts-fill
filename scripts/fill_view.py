@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-08-01 14:58:15
 LastEditors  : Scallions
-LastEditTime : 2020-08-22 11:43:02
+LastEditTime : 2020-10-11 12:59:15
 FilePath     : /gps-ts/scripts/fill_view.py
 @Description  : 
 '''
@@ -71,7 +71,8 @@ if __name__ == '__main__':
 
     # 定义比较的filler 种类
     fillers = [
-        fill.SLinearFiller, 
+        fill.KNNFiller,
+        # fill.SLinearFiller, 
         # fill.CubicFiller,
         # fill.PiecewisePolynomialFiller,
         # fill.FromDerivativesFiller,
@@ -81,9 +82,9 @@ if __name__ == '__main__':
         # fill.SplineFiller,
         # fill.BarycentricFiller,
         # fill.KroghFiller,
-        fill.PchipFiller,
-        fill.RegEMFiller, 
-        fill.MLPFiller
+        # fill.PchipFiller,
+        # fill.RegEMFiller, 
+        # fill.MLPFiller
         ]
     
 

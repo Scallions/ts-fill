@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 LastEditors  : Scallions
-LastEditTime : 2020-10-05 17:10:58
+LastEditTime : 2020-10-10 22:33:02
 FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -183,12 +183,12 @@ class MulTs(TimeSeries):
                 start = indexs[i]
         return gaps
 
-    def make_gap(self,gapsize=3, per = 0.2, cper = 0.5, cache_size = 0, c_i=True, c_ii=None):
+    def make_gap(self,gapsize=3, per = 0.2, cper = 0.5, cache_size = 0, c_i=True, c_ii=None, gmax=None):
         """make gap in ts
 
         c_i: Ture 随机取可能取到同一个站点的， False 在站点之间随机
         """
-        gindex = tool.make_gap(self,gapsize, per, cache_size)
+        gindex = tool.make_gap(self,gmax,gapsize, per, cache_size)
         nums_c = self.shape[1]
         import random
         c_idx = list(range(nums_c))

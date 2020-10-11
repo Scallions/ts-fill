@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-LastEditTime : 2020-10-04 10:37:27
+LastEditTime : 2020-10-11 14:06:55
 LastEditors  : Scallions
 FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -281,3 +281,130 @@ class MLPFiller(Filler):
         tsc = ts.complete()
         tc = mlp.fill(tsc)
         return tc
+
+class ConvFiller(Filler):
+    name = "Conv"
+    @staticmethod
+    def fill(ts):
+        import ts.conv as conv 
+        tsc = ts.complete()
+        tc = conv.fill(tsc)
+        return tc
+
+
+class KNNFiller(Filler):
+    name = "KNN"
+    @staticmethod
+    def fill(ts):
+        from fancyimpute import KNN 
+        tsc = ts.complete()
+        tc = KNN(k=3).fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+
+
+class SoftImputeFiller(Filler):
+    name = "SoftImpute"
+    @staticmethod
+    def fill(ts):
+        from fancyimpute import SoftImpute
+        tsc = ts.complete()
+        tc = SoftImpute().fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+
+class IterativeSVDFiller(Filler):
+    name = "IterativeSVD"
+    @staticmethod
+    def fill(ts):
+        from fancyimpute import IterativeSVD
+        tsc = ts.complete()
+        tc = IterativeSVD().fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+
+class IterativeImputerFiller(Filler):
+    name = "IterativeImputer"
+    @staticmethod
+    def fill(ts):
+        from fancyimpute import IterativeImputer
+        tsc = ts.complete()
+        tc = IterativeImputer().fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+
+
+class MatrixFactorizationFiller(Filler):
+    name = "MF"
+    @staticmethod
+    def fill(ts):
+        from fancyimpute import MatrixFactorization
+        tsc = ts.complete()
+        tc = MatrixFactorization().fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+
+class BiScalerFiller(Filler):
+    name = "BiScaler"
+    @staticmethod
+    def fill(ts):
+        from fancyimpute import BiScaler
+        tsc = ts.complete()
+        tc = BiScaler().fit_transform(tsc.to_numpy())
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+class NuclearNormMinimizationFiller(Filler):
+    name = "NuclearNormMinimization"
+    @staticmethod
+    def fill(ts):
+        from fancyimpute import NuclearNormMinimization
+        tsc = ts.complete()
+        tc = NuclearNormMinimization().fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+
+
+class MissForestFiller(Filler):
+    name = "MissForest"
+    @staticmethod
+    def fill(ts):
+        from missingpy import MissForest
+        tsc = ts.complete()
+        tc = MissForest().fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+
+class MICEFiller(Filler):
+    name = "MICE"
+    @staticmethod
+    def fill(ts):
+        import imputena
+        tsc = ts.complete()
+        tc = imputena.mice(data=tsc)
+        return type(ts)(datas = tc[2], indexs=tsc.index, columns=tsc.columns)
+
+class RandomForestFiller(Filler):
+    name = "RF"
+    @staticmethod
+    def fill(ts):
+        from pimpute import RFImputer
+        tsc = ts.complete()
+        tc = RFImputer.impute(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)    
+
+class MagicFiller(Filler):
+    name = "Magic"
+    @staticmethod
+    def fill(ts):
+        import magic 
+        tsc = ts.complete()
+        tc = magic.MAGIC().fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)    
+
+class MiceForestFiller(Filler):
+    name = "Miceforest"
+    @staticmethod
+    def fill(ts):
+        import miceforest as mf
+        tsc = ts.complete()
+        kernel = mf.MultipleImputedKernel(
+            tsc,
+            datasets=4,
+            save_all_iterations=True,
+            random_state=1991
+        )
+        kernel.mice(3)
+        tc = kernel.complete_data(2)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)    

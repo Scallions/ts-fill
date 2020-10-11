@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-08-29 16:05:38
 LastEditors  : Scallions
-LastEditTime : 2020-10-05 21:05:05
+LastEditTime : 2020-10-10 21:39:58
 FilePath     : /gps-ts/scripts/space_reflect.py
 Description  : 
 '''
@@ -23,19 +23,20 @@ def mean(x):
 
 fillers = [
     fill.SLinearFiller, # 一阶样条插值
+    fill.SplineFiller, # 三次样条
+    fill.AkimaFiller,
     fill.RegEMFiller, 
     fill.MLPFiller,
-    fill.PolyFiller, # 二阶多项式插值
+    # fill.ConvFiller,
+    # fill.PolyFiller, # 二阶多项式插值÷
     # fill.PiecewisePolynomialFiller, 
     # fill.KroghFiller, # overflow
     # fill.QuadraticFiller, # 二次
-    fill.AkimaFiller,
-    fill.SplineFiller, # 三次样条
     # fill.BarycentricFiller, # overflow
     # fill.FromDerivativesFiller,
-    fill.PchipFiller, # 三阶 hermite 插值
+    # fill.PchipFiller, # 三阶 hermite 插值
     # fill.SSAFiller,
-    ]
+]
 
 names = ['raw'] + [filler.name for filler in fillers]
 
@@ -72,6 +73,12 @@ plt.plot(eigen_vecs[:3,:].T)
 for k, x in data.items():
     xs = x[:,dd].T * eigen_vecs
     print(k, xs[0,:3].real)
+    if k == 'raw':
+        raw = xs[0,:]
+    else:
+        xs = xs[0,:]
+        angle = np.arccos(sum(raw*xs)/ np.sqrt(sum(raw*raw)*sum(xs*xs)))
+        print("angle: ", angle)
 
 plt.show()
 

@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-09-16 15:25:04
 LastEditors  : Scallions
-LastEditTime : 2020-10-05 20:51:59
+LastEditTime : 2020-10-10 22:49:16
 FilePath     : /gps-ts/scripts/fft.py
 Description  : 
 '''
@@ -32,20 +32,20 @@ if __name__ == "__main__":
         return x - xc
     fillers = [
         fill.SLinearFiller, # 一阶样条插值
+        fill.SplineFiller, # 三次样条
+        fill.AkimaFiller,
         fill.RegEMFiller, 
         fill.MLPFiller,
-        fill.PolyFiller, # 二阶多项式插值
+        # fill.ConvFiller,
+        # fill.PolyFiller, # 二阶多项式插值÷
         # fill.PiecewisePolynomialFiller, 
         # fill.KroghFiller, # overflow
         # fill.QuadraticFiller, # 二次
-        fill.AkimaFiller,
-        fill.SplineFiller, # 三次样条
         # fill.BarycentricFiller, # overflow
         # fill.FromDerivativesFiller,
-        fill.PchipFiller, # 三阶 hermite 插值
+        # fill.PchipFiller, # 三阶 hermite 插值
         # fill.SSAFiller,
-        ]
-
+    ]
     names = ['raw'] + [filler.name for filler in fillers]
 
     ind = pd.read_csv("./res/raw.csv", index_col="jd",parse_dates=True).index
@@ -76,6 +76,7 @@ if __name__ == "__main__":
         xf = np.fft.rfft(x)
         xfp = np.abs(xf)/(len(x)/2)
         freq = np.fft.rfftfreq(len(x), d=1.0/365)
+        print(name)
         print(freq[:10])
         plt.subplot(100*len(names)+10+i+1)
         plt.plot(freq[:20],xfp[:20])
