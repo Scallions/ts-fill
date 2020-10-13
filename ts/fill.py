@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-LastEditTime : 2020-10-11 14:06:55
+LastEditTime : 2020-10-13 11:18:49
 LastEditors  : Scallions
 FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -408,3 +408,23 @@ class MiceForestFiller(Filler):
         kernel.mice(3)
         tc = kernel.complete_data(2)
         return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)    
+
+class GainFiller(Filler):
+    name = "GAIN"
+    @staticmethod
+    def fill(ts):
+        import ts.gain as gain
+        tsc = ts.complete()
+        tc = gain.fill(tsc)
+        return tc
+ 
+
+class BritsFiller(Filler):
+    name = "Brits"
+    @staticmethod
+    def fill(ts):
+        import ts.brits as brits
+        tsc = ts.complete()
+        tc = brits.fill(tsc)
+        return tc
+ 

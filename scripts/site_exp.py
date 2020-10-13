@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-08-23 09:16:21
 LastEditors  : Scallions
-LastEditTime : 2020-10-11 14:15:27
+LastEditTime : 2020-10-13 11:18:36
 FilePath     : /gps-ts/scripts/site_exp.py
 Description  : 
 '''
@@ -91,13 +91,13 @@ if __name__ == "__main__":
     # 插值结果
     fillers = [
         ### imputena
-        fill.MICEFiller,
+        # fill.MICEFiller, # **
 
         ### missingpy
-        fill.MissForestFiller,
+        # fill.MissForestFiller, # **
 
         ### miceforest
-        fill.MiceForestFiller,
+        # fill.MiceForestFiller, # **
 
         ### para
         # fill.RandomForestFiller,
@@ -106,11 +106,11 @@ if __name__ == "__main__":
         # fill.MagicFiller,
         
         ### fancyimpute
-        fill.KNNFiller,
+        # fill.KNNFiller, # **
         # fill.SoftImputeFiller,
         # fill.IterativeSVDFiller,
-        fill.IterativeImputerFiller,
-        fill.MatrixFactorizationFiller,
+        # fill.IterativeImputerFiller, # **
+        # fill.MatrixFactorizationFiller, # **
         # fill.BiScalerFiller,
         # fill.NuclearNormMinimizationFiller,
 
@@ -127,10 +127,12 @@ if __name__ == "__main__":
         # fill.PchipFiller, # 三阶 hermite 插值
 
         ### matlab
-        fill.RegEMFiller, 
+        # fill.RegEMFiller, 
 
         ### self
-        fill.MLPFiller,
+        fill.BritsFiller,
+        # fill.MLPFiller,
+        # fill.GainFiller,
         # fill.ConvFiller,
         # fill.SSAFiller,
     ]
@@ -138,9 +140,9 @@ if __name__ == "__main__":
     # 点的大小
     pltsize = 2
 
-    gap_size = 30
+    gap_size = 180
     ltss = [ts.get_longest() for ts in tss]
-    val_tss = [(ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, c_i=False, c_ii=['n0,e0,u0'], gmax=gap_size*5)) for ts in ltss]
+    val_tss = [(ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, c_i=False, c_ii=['n0,e0,u0'], gmax=gap_size*1)) for ts in ltss]
     for tsl, tsg, gidx, gridx in val_tss:
         # set up gidx
         # gidx = list(pd.date_range('2018/10/01','2018/11/01'))
@@ -150,11 +152,11 @@ if __name__ == "__main__":
         # gidx = gidx + list(pd.date_range('2018/2/1', '2018/3/1'))
         
         # 去趋势
-        # trends, noises = tool.remove_trend(tsl)
-        # tsg = tsl.copy()
-        # tsg.loc[gidx, gridx] = None
-        # noises.loc[gidx, gridx] = None
-        # noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+        trends, noises = tool.remove_trend(tsl)
+        tsg = tsl.copy()
+        tsg.loc[gidx, gridx] = None
+        noises.loc[gidx, gridx] = None
+        noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
         
         fig, subs = plt.subplots(len(fillers)+1,1, sharex=True)
         subs[0].scatter(tsl.index, tsl[gridx[2]], label="raw", s=pltsize)
@@ -163,9 +165,11 @@ if __name__ == "__main__":
         tsg.to_csv("res/gap.csv")
         tsl.to_csv("res/raw.csv")
         for i, filler in enumerate(fillers):
-            # tsc = filler.fill(noises)
-            # tsc = trends + tsc
-            tsc = filler.fill(tsg)
+            tsc = filler.fill(noises)
+            tsc = trends + tsc
+
+
+            # tsc = filler.fill(tsg)
             subs[i+1].scatter(tsl.index, tsc[gridx[2]], s=pltsize)
             subs[i+1].scatter(tsl.index, tsg[gridx[2]], s=pltsize, c="black") 
             subs[i+1].set_ylabel(filler.name)

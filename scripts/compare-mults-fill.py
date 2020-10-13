@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 LastEditors  : Scallions
-LastEditTime : 2020-10-11 14:15:46
+LastEditTime : 2020-10-12 08:58:20
 FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -141,6 +141,7 @@ if __name__ == '__main__':
                 # tsc = filler.fill(noises)
                 # tsc = trends + tsc
                 # tsc = Mts(datas=tsc,indexs=tsc.index, columns=tsc.columns)
+
                 tsc = filler.fill(tsg)
                 tsl.columns = tsc.columns
                 this_res = tool.fill_res(tsc, tsl, gidx, gridx)

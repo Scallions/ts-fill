@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-06-05 15:06:13
 LastEditors  : Scallions
-LastEditTime : 2020-10-10 11:25:08
+LastEditTime : 2020-10-12 10:38:08
 FilePath     : /gps-ts/scripts/test_mpl.py
 @Description  : 
 '''
@@ -11,6 +11,7 @@ import sys
 sys.path.append('./')
 import ts.mlp as mlp
 import ts.conv as conv
+import ts.gain as gain
 from ts.timeseries import MulTs as Mts
 import ts.data as data
 import ts.tool as tool
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     noises.loc[gidx, gridx] = None
     noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
                                 
-    tsc = conv.fill(noises)
+    tsc = gain.fill(noises)
     tsc = trends + tsc
     tsg.plot(tsg.loc[:,gridx[2]])
     tsc.plot(tsc.loc[:, gridx[2]])

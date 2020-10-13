@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-10-10 22:11:57
 LastEditors  : Scallions
-LastEditTime : 2020-10-11 14:09:59
+LastEditTime : 2020-10-11 14:28:17
 FilePath     : /gps-ts/scripts/plot_res.py
 Description  : 
 '''
@@ -104,10 +104,9 @@ for k, x in data.items():
     if k == 'raw':
         continue
     subs[i].scatter(ind[b[0][0]-cache:b[0][-1]+cache], data["raw"][b[0][0]-cache:b[0][-1]+cache,c[0][dd]], s=pltsize, c="black")
-    subs[i].scatter(ind[b[0]], x[b[0],c[0][dd]], s=pltsize, c="red") 
-    subs[i].set_ylabel(names[i+1]+"(mm)")
+    s = subs[i].scatter(ind[b[0]], x[b[0],c[0][dd]], s=pltsize, c="red", label=k)
+    subs[i].legend([s],[k],loc='center left')
+    # subs[i].set_title(k)
+    subs[i].set_ylabel("U(mm)")
     i += 1
-    
-
-
 plt.show()
