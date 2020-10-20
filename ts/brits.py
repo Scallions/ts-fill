@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-10-13 09:56:23
 LastEditors  : Scallions
-LastEditTime : 2020-10-13 15:54:45
+LastEditTime : 2020-10-13 18:54:54
 FilePath     : /gps-ts/ts/brits.py
 Description  : 
 '''
@@ -147,8 +147,9 @@ class Rits(nn.Module):
         # y_loss = 0.0
 
         imputations = []
-
-        for t in range(SEQ_LEN):
+        
+        length = values.shape[1]
+        for t in range(length):
             x = values[:, t, :]
             if torch.isnan(x).any():
                 print("hhh")
@@ -298,7 +299,7 @@ def zero_var(sz):
 def fill(ts):
     tsc = ts.copy()
     global SEQ_LEN 
-    SEQ_LEN = ts.shape[0]
+    SEQ_LEN = 30
     # x_min = ts.min()
     # x_max = ts.max()
     # tsc = (tsc - x_min) / (x_max - x_min)
@@ -306,9 +307,9 @@ def fill(ts):
     xs = ts.std()
     tsc = (tsc - xm) / xs
     ds = MyDataset(tsc)
-    dataloader = torch.utils.data.DataLoader(dataset=ds,batch_size = 1, drop_last=True)
-    imputations = train(tsc, dataloader)
-    complete(tsc, imputations)
+    dataloader = torch.utils.data.DataLoader(dataset=ds,batch_size = 256, drop_last=False)
+    model = train(tsc, dataloader)
+    complete(tsc, model)
     # tsc = tsc * (x_max - x_min) + x_min
     tsc = tsc * xs + xm
     return tsc
@@ -322,27 +323,28 @@ class MyDataset(torch.utils.data.Dataset):
         # self.tsd = self.data.loc[:, self.gap_idx == False] # no na ts
         
     def __len__(self):
-        return 1
+        return self.data.shape[0] - 370
         
     def __getitem__(self, index):
-        masks = 1 - ((np.random.rand(*self.data.shape) < 0.20).astype(np.int) | self.data.isna().to_numpy().astype(np.int))
-        values = self.data.to_numpy().copy()
+        data = self.data.iloc[index:index+366,:]
+        masks = 1 - ((np.random.rand(*data.shape) < 0.20).astype(np.int) | data.isna().to_numpy().astype(np.int))
+        values = data.to_numpy().copy()
         values[np.isnan(values)] = 0
         masks[:5,:] = 1
         masks[-5:,:] = 1
-        for i in range(self.data.shape[0]):
+        for i in range(data.shape[0]):
             if np.isnan(values[i,:]).any():
                 print("hh")
-        deltas = np.zeros_like(self.data)
+        deltas = np.zeros_like(data)
         lastobs = np.zeros(9)
-        for i in range(self.data.shape[0]):
+        for i in range(data.shape[0]):
             deltas[i,:] = i - lastobs
             lastobs = lastobs * (1 - masks[i]) + i * masks[i]
         bvalues = values[::-1,:].copy()
         bmasks = masks[::-1,:].copy()
-        bdeltas = np.zeros_like(self.data)
+        bdeltas = np.zeros_like(data)
         lastobs = np.zeros(9)
-        for i in range(self.data.shape[0]):
+        for i in range(data.shape[0]):
             bdeltas[i,:] = i - lastobs
             lastobs = lastobs * (1 - bmasks[i]) + i * bmasks[i]        
         return values, masks, deltas, bvalues, bmasks, bdeltas
@@ -371,10 +373,38 @@ def train(tsc, dataloader):
             imputations = ret['imputations']
 
 
-    return imputations
+    return model
 
 
-def complete(tsc, imputations):
+def complete(tsc, model):
+    global SEQ_LEN
+    SEQ_LEN = tsc.shape[0]
+    data = tsc
+    masks = 1 - ((np.random.rand(*data.shape) < 0.20).astype(np.int) | data.isna().to_numpy().astype(np.int))
+    values = data.to_numpy().copy()
+    values[np.isnan(values)] = 0
+    masks[:5,:] = 1
+    masks[-5:,:] = 1
+    for i in range(data.shape[0]):
+        if np.isnan(values[i,:]).any():
+            print("hh")
+    deltas = np.zeros_like(data)
+    lastobs = np.zeros(9)
+    for i in range(data.shape[0]):
+        deltas[i,:] = i - lastobs
+        lastobs = lastobs * (1 - masks[i]) + i * masks[i]
+    bvalues = values[::-1,:].copy()
+    bmasks = masks[::-1,:].copy()
+    bdeltas = np.zeros_like(data)
+    lastobs = np.zeros(9)
+    for i in range(data.shape[0]):
+        bdeltas[i,:] = i - lastobs
+        lastobs = lastobs * (1 - bmasks[i]) + i * bmasks[i]        
+    data = [values, masks, deltas, bvalues, bmasks, bdeltas]
+    data = list(map(lambda x: torch.from_numpy(x).unsqueeze(0), data))
+    data = to_var(data)
+    model.eval()
+    imputations = model(data)["imputations"]
     for i in range(tsc.shape[0]):
         if tsc.iloc[i,:].isna().any():
             idx = tsc.iloc[i,:].isna()

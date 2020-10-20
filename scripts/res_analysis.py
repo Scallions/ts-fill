@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-08-29 16:05:38
 LastEditors  : Scallions
-LastEditTime : 2020-10-11 14:13:55
+LastEditTime : 2020-10-20 16:45:59
 FilePath     : /gps-ts/scripts/res_analysis.py
 Description  : 
 '''
@@ -23,13 +23,13 @@ def mean(x):
 
 fillers = [
     ### imputena
-    fill.MICEFiller,
+    # fill.MICEFiller, # **
 
     ### missingpy
-    fill.MissForestFiller,
+    # fill.MissForestFiller, # **
 
     ### miceforest
-    fill.MiceForestFiller,
+    # fill.MiceForestFiller, # **
 
     ### para
     # fill.RandomForestFiller,
@@ -38,11 +38,11 @@ fillers = [
     # fill.MagicFiller,
     
     ### fancyimpute
-    fill.KNNFiller,
+    # fill.KNNFiller, # **
     # fill.SoftImputeFiller,
     # fill.IterativeSVDFiller,
-    fill.IterativeImputerFiller,
-    fill.MatrixFactorizationFiller,
+    # fill.IterativeImputerFiller, # **
+    # fill.MatrixFactorizationFiller, # **
     # fill.BiScalerFiller,
     # fill.NuclearNormMinimizationFiller,
 
@@ -59,13 +59,16 @@ fillers = [
     # fill.PchipFiller, # 三阶 hermite 插值
 
     ### matlab
-    fill.RegEMFiller, 
+    # fill.RegEMFiller, 
 
     ### self
+    # fill.BritsFiller,
     fill.MLPFiller,
+    # fill.GainFiller,
     # fill.ConvFiller,
     # fill.SSAFiller,
 ]
+
 names = ['raw'] + [filler.name for filler in fillers]
 
 ind = pd.read_csv("./res/raw.csv", index_col="jd",parse_dates=True).index
@@ -73,7 +76,7 @@ data = {}
 for name in names:
     data[name] = pd.read_csv(f"./res/{name}.csv").to_numpy()[:,1:].astype(np.float64)
 
-a = np.abs((data["raw"]-data["RegEM"])) > 0.00001
+a = np.abs((data["raw"]-data[names[-1]])) > 0.00001
 b = np.where(np.any(a, axis=1))
 c = np.where(np.any(a, axis=0))
 

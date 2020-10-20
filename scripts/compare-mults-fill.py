@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 LastEditors  : Scallions
-LastEditTime : 2020-10-12 08:58:20
+LastEditTime : 2020-10-19 10:55:18
 FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -28,11 +28,11 @@ def load_data(lengths=3, epoch=6):
     Returns:
         [mts]: mts s
     """
-    dir_path = './data/igs/'
+    dir_path = './data/an/'
     tss = []
     files = os.listdir(dir_path)
     for file_ in files:
-        if '.AN.tenv3' in file_:
+        if '.tenv3' in file_:
             tss.append(Mts(dir_path + file_, data.FileType.Ngl))
     nums = len(tss)
     rtss = []
@@ -54,8 +54,8 @@ if __name__ == '__main__':
     result = {}
 
     # 定义 数据集
-    clip_length = 500
-    tss = load_data(lengths=3, epoch=60)
+    clip_length = 400
+    tss = load_data(lengths=4, epoch=80)
     tsls = [ts.get_longest() for ts in tss if len(ts) > clip_length]
     tsls = [tsl for tsl in tsls if len(tsl) > clip_length]
     if len(tsls) == 0:

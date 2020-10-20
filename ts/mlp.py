@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-05-17 11:19:12
 LastEditors  : Scallions
-LastEditTime : 2020-10-11 18:31:52
+LastEditTime : 2020-10-20 18:56:18
 FilePath     : /gps-ts/ts/mlp.py
 @Description  : 
 '''
@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 import pandas as pd
 import numpy as np
+import random
 
 class MyDataset(torch.utils.data.Dataset):
     def __init__(self, data, range_):
@@ -41,10 +42,18 @@ class SELayer(torch.nn.Module):
 
     def forward(self,x):
         b,l = x.size()
-        y = self.avgpool(x.view(l,1,b)).view(1,l)
+        y = self.avgpool(x.T.view(l,1,b)).view(1,l)
         y = self.fc(y)
         return x * y.expand_as(x)
         
+def setup_seed(seed):
+     torch.manual_seed(seed)
+     torch.cuda.manual_seed_all(seed)
+     np.random.seed(seed)
+     random.seed(seed)
+     torch.backends.cudnn.deterministic = True
+# 设置随机数种子
+# setup_seed(20)
 
 def fill(ts, range_=15):
     """[summary]
@@ -56,28 +65,33 @@ def fill(ts, range_=15):
     Returns:
         [type]: [description]
     """
-    """@nni.variable(nni.choice(1,3,5,10), name=trange_)"""
+    setup_seed(76)
+    """@nni.variable(nni.choice(1,3,5,10,15), name=trange_)"""
     trange_ = range_
     tsc = ts.copy()
     xm = ts.mean()
     xs = ts.std()
     tsc = (tsc - xm) / xs
     ds = MyDataset(tsc, trange_)
-    dataloader = torch.utils.data.DataLoader(dataset=ds,batch_size = 256, shuffle=True, drop_last=True)
-    model = train(tsc, dataloader, trange_)
+    train_size = int(0.8 * len(ds))
+    test_size = len(ds) - train_size
+    train_db, val_db = torch.utils.data.random_split(ds, [train_size, test_size])
+    dataloader = torch.utils.data.DataLoader(dataset=train_db,batch_size = 256, shuffle=True, drop_last=False)
+    val_dl = torch.utils.data.DataLoader(dataset=val_db,batch_size=test_size)
+    model = train(tsc, dataloader, trange_, val_dl)
     complete(tsc, model, trange_)
     tsc = tsc * xs + xm
     return tsc
 
 
-def train(tsc, dataloader,range_):
+def train(tsc, dataloader,range_, val_dl):
     gap_idx = tsc.isna().any()
     net = make_net(gap_idx, range_) # use gap_idx make mlp net
     # from torchsummary import summary
     # len_gap = gap_idx.sum()
     # len_data = len(gap_idx) - len_gap
     # summary(net, input_size=(6,len_data*(2*range_+1)))
-    train_net(net, dataloader, range_)
+    train_net(net, dataloader, range_, val_dl)
     return net 
 
     
@@ -87,18 +101,18 @@ def make_net(gap_idx, range_):
     len_data = len(gap_idx) - len_gap # 没有缺失值的维数
 
     # nni
-    """@nni.function_choice(torch.nn.ReLU(),torch.nn.LeakyReLU(), torch.nn.Tanh(), torch.nn.Sigmoid(), name=torch.nn.ReLU)"""
-    r = torch.nn.Tanh()
-    # r = nn.LeakyReLU()
+    """@nni.function_choice(torch.nn.ReLU(),torch.nn.LeakyReLU(),torch.nn.Tanh(),torch.nn.Sigmoid(), name=r)"""
+    r = nn.LeakyReLU()
+    # r = torch.nn.Tanh()
 
     # nni hidden
-    """@nni.variable(nni.choice(0.5,1,2), name=hidden)"""
+    # """@nni.variable(nni.choice(0.5,1,2), name=hidden)"""
     hidden = 0.5
     """@nni.variable(nni.choice(1,2,3,4), name=hidden2)"""
     hidden2 = 4
 
-    hidden_num = int(hidden*(2*range_+1))
-    hidden_num2 = int(hidden2*len_gap)
+    # hidden_num = int(hidden*(2*range_+1))
+    hidden_num = int(hidden2*len_gap)
 
     model = torch.nn.Sequential()
     ## 2d conv
@@ -127,41 +141,52 @@ def make_net(gap_idx, range_):
     # model.add_module('pool', nn.AdaptiveAvgPool2d(1))
     # model.add_module('flatten', nn.Flatten())
     # model.add_module('l1',torch.nn.Linear(64, hidden_num))
+    model.add_module('att1', SELayer(len_data*(range_*2+1)))
     model.add_module('l1',torch.nn.Linear(len_data*(range_*2+1), hidden_num))
     model.add_module('ac1',r)
     model.add_module('bn1', torch.nn.BatchNorm1d(hidden_num))
-    # model.add_module('att1', SELayer(hidden_num))
-    model.add_module('l2', torch.nn.Linear(hidden_num,hidden_num2))
-    model.add_module('ac2',r) 
-    model.add_module('bn2', torch.nn.BatchNorm1d(hidden_num2))
+    # model.add_module('l2', torch.nn.Linear(hidden_num,hidden_num2))
+    model.add_module('l2', torch.nn.Linear(hidden_num,len_gap))
+    # model.add_module('ac2',r) 
+    # model.add_module('bn2', torch.nn.BatchNorm1d(hidden_num2))
     # model.add_module('att2', SELayer(hidden_num2))
-    model.add_module('l3', torch.nn.Linear(hidden_num2,len_gap))
+    # model.add_module('l3', torch.nn.Linear(hidden_num2,len_gap))
     return model
 
 
-def train_net(net, dataloader, range_):
-    # """@nni.variable(nni.choice(10,20,30,50), name=epochs)"""
+def train_net(net, dataloader, range_,val_dl):
+    """@nni.variable(nni.choice(10,30,50,100), name=epochs)"""
     epochs = 100
-    opt = torch.optim.Adam(net.parameters(), lr=0.001)
+    # opt = torch.optim.Adam(net.parameters(), lr=0.001)
+    """@nni.function_choice(torch.optim.SGD(net.parameters(), lr=0.1, weight_decay=0.001, momentum=0.9),torch.optim.Adam(net.parameters(), lr=0.001), name=opt)"""
+    opt = torch.optim.SGD(net.parameters(), lr=0.1, weight_decay=0.001, momentum=0.9)
 
     l1 = torch.nn.MSELoss()
     # l1 = torch.nn.L1Loss()
 
     for epoch in range(epochs):
         for i, (x, y) in enumerate(dataloader):
+            net.train()
             x = x.float() 
             y = y.float()
             y_hat = net(x)
             l11 = l1(y, y_hat)
             l12 = (y - y_hat).sum().abs() / y.shape[0] / y.shape[1]
-            l = l11*0.3 + 0.7*l12
+            l = l11*1# + 0.3*l12
             opt.zero_grad()
             l.backward()
             opt.step()
-            # if i % 10 == 9:
+        # if (epoch % 5) == 0:
+        for x,y in val_dl:
+            net.eval()
+            x = x.float() 
+            y = y.float()
+            y_hat = net(x)
+            l11 = l1(y, y_hat)
+            l12 = (y - y_hat).sum().abs() / y.shape[0] / y.shape[1] 
+            l = l11*1# + 0.3*l12
             print(f"\repoch: {epoch}, batch: {i}, loss: {l.item()}, l1: {l11.item()}, l2: {l12.item()}", end="")
             """@nni.report_intermediate_result(l.item())"""
-    print()
     """@nni.report_final_result(l.item())"""
 
 

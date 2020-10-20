@@ -1,8 +1,8 @@
 authorName: ligong
 experimentName: test_mpl
-trialConcurrency: 4
+trialConcurrency: 8
 maxExecDuration: 1h
-maxTrialNum: 40
+maxTrialNum: 200
 trainingServicePlatform: local
 useAnnotation: true 
 tuner:
@@ -10,7 +10,7 @@ tuner:
   classArgs:
     optimize_mode: minimize
 trial:
-  command: python scripts/test_mpl.py
+  command: python scripts/site_exp.py
   codeDir: .
   gpuNum: 0
 assessor:

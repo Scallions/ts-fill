@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-08-23 09:16:21
 LastEditors  : Scallions
-LastEditTime : 2020-10-13 11:18:36
+LastEditTime : 2020-10-20 18:38:03
 FilePath     : /gps-ts/scripts/site_exp.py
 Description  : 
 '''
@@ -17,14 +17,18 @@ import ts.fill as fill
 from loguru import logger
 import pandas as pd
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 
 SITES = [
-    ['CAS1.AN.tenv3', 'MCM4.AN.tenv3', 'DAV1.AN.tenv3'],
-    ['CAS1.AN.tenv3', 'CRAR.AN.tenv3', 'MCM4.AN.tenv3'],
+    # # ['CAS1.AN.tenv3', 'MCM4.AN.tenv3', 'DAV1.AN.tenv3'],
+    # # ['CAS1.AN.tenv3', 'CRAR.AN.tenv3', 'MCM4.AN.tenv3'],
+    # ['CAPF.AN.tenv3', 'PRPT.AN.tenv3', 'PAL2.AN.tenv3'], # an
+    ['CAPF.AN.tenv3', 'PRPT.AN.tenv3', 'ROBN.AN.tenv3', 'PAL2.AN.tenv3'],
+    # ['LEIJ.EU.tenv3', 'WARN.EU.tenv3', 'POTS.EU.tenv3', 'PTBB.EU.tenv3'], # eu
 ]
 
-def load_data(lengths=3, epoch=6):
+def load_data():
     """load data
     
     Args:
@@ -33,7 +37,7 @@ def load_data(lengths=3, epoch=6):
     Returns:
         [mts]: mts s
     """
-    dir_path = './data/igs/'
+    dir_path = './data/an/'
     rtss = []
     for site in SITES:
         tss = []
@@ -73,6 +77,9 @@ def load_data2(lengths=6, epoch=6):
 
 if __name__ == "__main__":
     tss = load_data()
+    
+    # load from csv
+
     axis_name = ["N", "E", "U"]
 
     # 绘制两个站的原始图
@@ -118,7 +125,7 @@ if __name__ == "__main__":
         # fill.SLinearFiller, # 一阶样条插值
         # fill.SplineFiller, # 三次样条
         # fill.AkimaFiller,
-        # fill.PolyFiller, # 二阶多项式插值÷
+        # fill.PolyFiller, # 二阶多项式插值
         # fill.PiecewisePolynomialFiller, 
         # fill.KroghFiller, # overflow
         # fill.QuadraticFiller, # 二次
@@ -130,8 +137,8 @@ if __name__ == "__main__":
         # fill.RegEMFiller, 
 
         ### self
-        fill.BritsFiller,
-        # fill.MLPFiller,
+        fill.MLPFiller,
+        # fill.BritsFiller,
         # fill.GainFiller,
         # fill.ConvFiller,
         # fill.SSAFiller,
@@ -140,12 +147,12 @@ if __name__ == "__main__":
     # 点的大小
     pltsize = 2
 
-    gap_size = 180
+    gap_size = 30
     ltss = [ts.get_longest() for ts in tss]
-    val_tss = [(ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, c_i=False, c_ii=['n0,e0,u0'], gmax=gap_size*1)) for ts in ltss]
+    val_tss = [(ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, c_i=False, c_ii=['n0,e0,u0'], gmax=gap_size*5)) for ts in ltss]
     for tsl, tsg, gidx, gridx in val_tss:
         # set up gidx
-        # gidx = list(pd.date_range('2018/10/01','2018/11/01'))
+        gidx = list(pd.date_range('2017/01/01','2017/07/01'))
         # gidx = gidx + list(pd.date_range('2018/7/1', '2018/8/1'))
         # gidx = gidx + list(pd.date_range('2017/7/20', '2017/8/20'))
         # gidx = gidx + list(pd.date_range('2017/5/1', '2017/6/1'))
@@ -158,10 +165,10 @@ if __name__ == "__main__":
         noises.loc[gidx, gridx] = None
         noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
         
-        fig, subs = plt.subplots(len(fillers)+1,1, sharex=True)
-        subs[0].scatter(tsl.index, tsl[gridx[2]], label="raw", s=pltsize)
-        subs[0].scatter(tsl.index, tsg[gridx[2]], s=pltsize, c="black") 
-        subs[0].set_ylabel("raw")
+        # fig, subs = plt.subplots(len(fillers)+1,1, sharex=True)
+        # subs[0].scatter(tsl.index, tsl[gridx[2]], label="raw", s=pltsize)
+        # subs[0].scatter(tsl.index, tsg[gridx[2]], s=pltsize, c="black") 
+        # subs[0].set_ylabel("raw")
         tsg.to_csv("res/gap.csv")
         tsl.to_csv("res/raw.csv")
         for i, filler in enumerate(fillers):
@@ -170,11 +177,29 @@ if __name__ == "__main__":
 
 
             # tsc = filler.fill(tsg)
-            subs[i+1].scatter(tsl.index, tsc[gridx[2]], s=pltsize)
-            subs[i+1].scatter(tsl.index, tsg[gridx[2]], s=pltsize, c="black") 
-            subs[i+1].set_ylabel(filler.name)
+            # subs[i+1].scatter(tsl.index, tsc[gridx[2]], s=pltsize)
+            # subs[i+1].scatter(tsl.index, tsg[gridx[2]], s=pltsize, c="black") 
+            # subs[i+1].set_ylabel(filler.name)
             tsc.to_csv("res/"+filler.name+".csv")
         # plt.scatter(tsl.index, tsg[gridx[0]], s=pltsize)
         # plt.legend()
-        plt.show()
+        # plt.show()
+
+        # # for nni valid
+        # # gidx = list(pd.date_range('2017/01/01','2017/07/01')) 
+        # # trends, noises = tool.remove_trend(tsl)
+        # # tsg = tsl.copy()
+        # # tsg.loc[gidx, gridx] = None
+        # # noises.loc[gidx, gridx] = None
+        # # noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+        # raw = tsl.to_numpy().astype(np.float64)
+        # aft = tsc.to_numpy().astype(np.float64)
+        # a = np.abs((raw-aft)) > 0.00001
+        # b = np.where(np.any(a, axis=1))
+        # c = np.where(np.any(a, axis=0))
+        # dd = 2
+        # d = raw[:,c[0][dd]]-aft[:,c[0][dd]]
+        # # print(f"mean, std, mae: ",d.mean(), d.std(), np.abs(d).mean())
+        # """@nni.report_final_result((d*d).mean())"""
+
         break

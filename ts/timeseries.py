@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 LastEditors  : Scallions
-LastEditTime : 2020-10-10 22:33:02
+LastEditTime : 2020-10-16 22:24:48
 FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -181,6 +181,9 @@ class MulTs(TimeSeries):
                 gaps.starts.append(tool.jd2datetime(indexs[i-1] + 1))
                 gaps.lengths.append(-1*int(len_2))
                 start = indexs[i]
+        len_1 = indexs[-1] - start + 1
+        gaps.starts.append(tool.jd2datetime(start))
+        gaps.lengths.append(int(len_1))
         return gaps
 
     def make_gap(self,gapsize=3, per = 0.2, cper = 0.5, cache_size = 0, c_i=True, c_ii=None, gmax=None):

@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-05-17 11:19:12
 LastEditors  : Scallions
-LastEditTime : 2020-10-10 20:17:53
+LastEditTime : 2020-10-20 17:00:49
 FilePath     : /gps-ts/ts/conv.py
 @Description  : 
 '''
@@ -127,7 +127,7 @@ def fill(ts, range_=10):
     Returns:
         [type]: [description]
     """
-    """@nni.variable(nni.choice(1,3,5,10), name=trange_)"""
+    # """@nni.variable(nni.choice(1,3,5,10), name=trange_)"""
     trange_ = range_
     tsc = ts.copy()
     xm = ts.mean()
@@ -158,14 +158,14 @@ def make_net(gap_idx, range_):
     len_data = len(gap_idx) - len_gap # 没有缺失值的维数
 
     # nni
-    """@nni.function_choice(torch.nn.ReLU(),torch.nn.LeakyReLU(), torch.nn.Tanh(), torch.nn.Sigmoid(), name=torch.nn.ReLU)"""
+    # """@nni.function_choice(torch.nn.ReLU(),torch.nn.LeakyReLU(), torch.nn.Tanh(), torch.nn.Sigmoid(), name=torch.nn.ReLU)"""
     r = torch.nn.Tanh()
     # r = nn.LeakyReLU()
 
     # nni hidden
-    """@nni.variable(nni.choice(0.5,1,2), name=hidden)"""
+    # """@nni.variable(nni.choice(0.5,1,2), name=hidden)"""
     hidden = 0.5
-    """@nni.variable(nni.choice(1,2,3,4), name=hidden2)"""
+    # """@nni.variable(nni.choice(1,2,3,4), name=hidden2)"""
     hidden2 = 4
 
     hidden_num = int(hidden*(2*range_+1))
@@ -236,9 +236,9 @@ def train_net(net, dataloader, range_):
             opt.step()
             # if i % 10 == 9:
             print(f"\repoch: {epoch}, batch: {i}, loss: {l.item()}, l1: {l11.item()}, l2: {l12.item()}", end="")
-            """@nni.report_intermediate_result(l.item())"""
+            # """@nni.report_intermediate_result(l.item())"""
     print()
-    """@nni.report_final_result(l.item())"""
+    # """@nni.report_final_result(l.item())"""
 
 
 def complete(tsc, model, range_):
