@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 13:06:55
 LastEditors  : Scallions
-LastEditTime : 2020-10-10 22:32:26
+LastEditTime : 2020-11-19 09:58:47
 FilePath     : /gps-ts/ts/tool.py
 @Description  : 
 '''
@@ -158,6 +158,28 @@ def concat_multss(tss):
         res = pd.concat([res.loc[a_idx], ts.loc[a_idx]],axis=1)
     return type(tss[0]).from_df(res)
 
+def concat_u_multss(tss):
+    res = tss[0].iloc[:,2]
+    for ts in tss[1:]:
+        r_idx = res.index
+        t_idx = ts.index
+        a_idx = t_idx & r_idx
+        if len(a_idx) == 0:
+            raise Exception("non common idx") 
+        res = pd.concat([res.loc[a_idx], ts.loc[a_idx].iloc[:,2]],axis=1)
+    return type(tss[0]).from_df(res)
+
+def concat_or_multss(tss):
+    res = tss[0]
+    for ts in tss[1:]:
+        r_idx = res.index
+        t_idx = ts.index
+        a_idx = t_idx & r_idx
+        if len(a_idx) == 0:
+            raise Exception("non common idx") 
+        res = pd.concat([res, ts],axis=1)
+    return type(tss[0]).from_df(res)
+
 def remove_trend(mts):
     """从时间序列中提取周年项，和残差
 
@@ -170,10 +192,13 @@ def remove_trend(mts):
     def trend_of_ts(ts):
         length = len(ts)
         x = np.array(list(range(length))).reshape((length,1))
-        sinx = np.sin(x*np.pi*2/365)
-        sin2x = np.sin(2*x*np.pi*2/365)
+        # sinx = np.sin(x*np.pi*2/365)
+        # cosx = np.cos(x*np.pi*2/365)
+        # sin2x = np.sin(2*x*np.pi*2/365)
+        # cos2x = np.cos(2*x*np.pi*2/365)
         ones = np.ones((length,1))
-        data = np.hstack((ones, x, sinx, sin2x))
+        # data = np.hstack((ones, x, sinx, cosx, sin2x, cos2x))
+        data = np.hstack((ones, x))
         b = np.dot(np.dot(np.linalg.inv(np.dot(data.transpose(), data)), data.transpose()), ts)
         ts_hat = np.dot(data, b)
         noise = ts - ts_hat 

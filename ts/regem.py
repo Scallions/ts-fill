@@ -1,9 +1,9 @@
 '''
 @Author       : Scallions
 @Date         : 2020-03-23 18:23:29
-@LastEditors  : Scallions
-@LastEditTime : 2020-03-25 10:15:32
-@FilePath     : /gps-ts/ts/regem.py
+LastEditors  : Scallions
+LastEditTime : 2020-10-26 20:46:29
+FilePath     : /gps-ts/ts/regem.py
 @Description  : regem for imputation
 use matlab connection pls open ur matlab and change dir to where reg em in.
 '''

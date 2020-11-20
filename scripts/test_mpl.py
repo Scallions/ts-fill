@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-06-05 15:06:13
 LastEditors  : Scallions
-LastEditTime : 2020-10-12 10:38:08
+LastEditTime : 2020-10-26 20:34:43
 FilePath     : /gps-ts/scripts/test_mpl.py
 @Description  : 
 '''
@@ -55,7 +55,8 @@ if __name__ == '__main__':
     noises.loc[gidx, gridx] = None
     noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
                                 
-    tsc = gain.fill(noises)
+    import ts.stvregem as stv
+    tsc = stv.fill(noises)
     tsc = trends + tsc
     tsg.plot(tsg.loc[:,gridx[2]])
     tsc.plot(tsc.loc[:, gridx[2]])

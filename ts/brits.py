@@ -1,8 +1,8 @@
 '''
 Author       : Scallions
-Date         : 2020-10-13 09:56:23
+Date         : 2020-10-13 020:56:23
 LastEditors  : Scallions
-LastEditTime : 2020-10-13 18:54:54
+LastEditTime : 2020-11-18 10:27:15
 FilePath     : /gps-ts/ts/brits.py
 Description  : 
 '''
@@ -103,15 +103,15 @@ class Rits(nn.Module):
         self.build()
 
     def build(self):
-        self.rnn_cell = nn.LSTMCell(9 * 2, RNN_HID_SIZE)
+        self.rnn_cell = nn.LSTMCell(20 * 2, RNN_HID_SIZE)
 
-        self.temp_decay_h = TemporalDecay(input_size = 9, output_size = RNN_HID_SIZE, diag = False)
-        self.temp_decay_x = TemporalDecay(input_size = 9, output_size = 9, diag = True)
+        self.temp_decay_h = TemporalDecay(input_size = 20, output_size = RNN_HID_SIZE, diag = False)
+        self.temp_decay_x = TemporalDecay(input_size = 20, output_size = 20, diag = True)
 
-        self.hist_reg = nn.Linear(RNN_HID_SIZE, 9)
-        self.feat_reg = FeatureRegression(9)
+        self.hist_reg = nn.Linear(RNN_HID_SIZE, 20)
+        self.feat_reg = FeatureRegression(20)
 
-        self.weight_combine = nn.Linear(9 * 2, 9)
+        self.weight_combine = nn.Linear(20 * 2, 20)
 
         self.dropout = nn.Dropout(p = 0.25)
         self.out = nn.Linear(RNN_HID_SIZE, 1)
@@ -336,14 +336,14 @@ class MyDataset(torch.utils.data.Dataset):
             if np.isnan(values[i,:]).any():
                 print("hh")
         deltas = np.zeros_like(data)
-        lastobs = np.zeros(9)
+        lastobs = np.zeros(20)
         for i in range(data.shape[0]):
             deltas[i,:] = i - lastobs
             lastobs = lastobs * (1 - masks[i]) + i * masks[i]
         bvalues = values[::-1,:].copy()
         bmasks = masks[::-1,:].copy()
         bdeltas = np.zeros_like(data)
-        lastobs = np.zeros(9)
+        lastobs = np.zeros(20)
         for i in range(data.shape[0]):
             bdeltas[i,:] = i - lastobs
             lastobs = lastobs * (1 - bmasks[i]) + i * bmasks[i]        
@@ -389,14 +389,14 @@ def complete(tsc, model):
         if np.isnan(values[i,:]).any():
             print("hh")
     deltas = np.zeros_like(data)
-    lastobs = np.zeros(9)
+    lastobs = np.zeros(20)
     for i in range(data.shape[0]):
         deltas[i,:] = i - lastobs
         lastobs = lastobs * (1 - masks[i]) + i * masks[i]
     bvalues = values[::-1,:].copy()
     bmasks = masks[::-1,:].copy()
     bdeltas = np.zeros_like(data)
-    lastobs = np.zeros(9)
+    lastobs = np.zeros(20)
     for i in range(data.shape[0]):
         bdeltas[i,:] = i - lastobs
         lastobs = lastobs * (1 - bmasks[i]) + i * bmasks[i]        

@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-05-17 11:19:12
 LastEditors  : Scallions
-LastEditTime : 2020-10-20 18:56:18
+LastEditTime : 2020-10-20 20:25:01
 FilePath     : /gps-ts/ts/mlp.py
 @Description  : 
 '''
@@ -17,7 +17,10 @@ class MyDataset(torch.utils.data.Dataset):
         self.data = data
         self.range_ = range_
         self.gap_idx = self.data.isna().any()
-        self.idxs = data.index[data.isna().T.any()==False][2*range_:-2*range_] 
+        if range_ != 0:
+            self.idxs = data.index[data.isna().T.any()==False][2*range_:-2*range_] 
+        else:
+            self.idxs = data.index[data.isna().T.any()==False]
         self.tsg = self.data.loc[:, self.gap_idx == True] # na ts
         self.tsd = self.data.loc[:, self.gap_idx == False] # no na ts
         
@@ -55,7 +58,7 @@ def setup_seed(seed):
 # 设置随机数种子
 # setup_seed(20)
 
-def fill(ts, range_=15):
+def fill(ts, range_=0):
     """[summary]
 
     Args:
@@ -66,7 +69,7 @@ def fill(ts, range_=15):
         [type]: [description]
     """
     setup_seed(76)
-    """@nni.variable(nni.choice(1,3,5,10,15), name=trange_)"""
+    """@nni.variable(nni.choice(0,1,3,5,10,15), name=trange_)"""
     trange_ = range_
     tsc = ts.copy()
     xm = ts.mean()
@@ -102,7 +105,7 @@ def make_net(gap_idx, range_):
 
     # nni
     """@nni.function_choice(torch.nn.ReLU(),torch.nn.LeakyReLU(),torch.nn.Tanh(),torch.nn.Sigmoid(), name=r)"""
-    r = nn.LeakyReLU()
+    r = torch.nn.Tanh()
     # r = torch.nn.Tanh()
 
     # nni hidden
@@ -141,15 +144,15 @@ def make_net(gap_idx, range_):
     # model.add_module('pool', nn.AdaptiveAvgPool2d(1))
     # model.add_module('flatten', nn.Flatten())
     # model.add_module('l1',torch.nn.Linear(64, hidden_num))
-    model.add_module('att1', SELayer(len_data*(range_*2+1)))
+    # model.add_module('att1', SELayer(len_data*(range_*2+1)))
     model.add_module('l1',torch.nn.Linear(len_data*(range_*2+1), hidden_num))
     model.add_module('ac1',r)
-    model.add_module('bn1', torch.nn.BatchNorm1d(hidden_num))
+    # model.add_module('bn1', torch.nn.BatchNorm1d(hidden_num))
     # model.add_module('l2', torch.nn.Linear(hidden_num,hidden_num2))
+    model.add_module('att2', SELayer(hidden_num))
     model.add_module('l2', torch.nn.Linear(hidden_num,len_gap))
     # model.add_module('ac2',r) 
     # model.add_module('bn2', torch.nn.BatchNorm1d(hidden_num2))
-    # model.add_module('att2', SELayer(hidden_num2))
     # model.add_module('l3', torch.nn.Linear(hidden_num2,len_gap))
     return model
 
@@ -184,7 +187,7 @@ def train_net(net, dataloader, range_,val_dl):
             y_hat = net(x)
             l11 = l1(y, y_hat)
             l12 = (y - y_hat).sum().abs() / y.shape[0] / y.shape[1] 
-            l = l11*1# + 0.3*l12
+            l = l11*1 + 0.3*l12
             print(f"\repoch: {epoch}, batch: {i}, loss: {l.item()}, l1: {l11.item()}, l2: {l12.item()}", end="")
             """@nni.report_intermediate_result(l.item())"""
     """@nni.report_final_result(l.item())"""

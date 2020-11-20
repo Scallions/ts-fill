@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-02-05 14:30:53
 LastEditors  : Scallions
-LastEditTime : 2020-10-16 22:24:48
+LastEditTime : 2020-11-17 20:25:02
 FilePath     : /gps-ts/ts/timeseries.py
 @Description  :Single Variant and multiple variant time series datatype
 '''
@@ -160,6 +160,31 @@ class MulTs(TimeSeries):
         """
         tsl = tool.get_longest(self)
         return MulTs(datas=tsl)
+    
+    def get_or_longest(self):
+        """[summary]
+        """
+        self.complete()
+        ind = self.isna().all(axis=1)
+        i = 0 
+        m = 0
+        ss = 0
+        ee = 0
+        while i < len(ind):
+            if ind[i] == False:
+                s = i 
+                while i< len(ind) and ind[i] == False:
+                    i += 1 
+                if i - s > m:
+                    ## 判断是否存在列全为空
+                    if self.iloc[s:i,:].isna().all().sum() > 0.5*self.shape[1]:
+                        continue
+                    m = i - s
+                    ss = s 
+                    ee = i - 1 
+            i+=1
+        return MulTs(datas=self.iloc[ss:ee+1,:])
+
 
     def gap_status(self):
         """get status of ts no compelte
@@ -190,15 +215,24 @@ class MulTs(TimeSeries):
         """make gap in ts
 
         c_i: Ture 随机取可能取到同一个站点的， False 在站点之间随机
+        c_ii: 自定义gap列
+        gmax: 最大gap数
+        cper: 缺失列 百分比
+        per: 缺失行 百分比
+        gapsize: 连续缺失大小
+        cache_size: 头尾缓存大小
         """
         gindex = tool.make_gap(self,gmax,gapsize, per, cache_size)
         nums_c = self.shape[1]
         import random
         c_idx = list(range(nums_c))
-        c_s = self.columns 
-        c_idx = list(map(lambda x: str(x[0])+str(x[1]//3),zip(c_s,c_idx)))
+        c_s = self.columns
+        if set(c_s) == 3: 
+            c_idx = list(map(lambda x: str(x[0])+str(x[1]//3),zip(c_s,c_idx)))
+        else:
+            c_idx = list(map(lambda x: str(x[0])+str(x[1]),zip(c_s,c_idx)))
         self.columns = c_idx
-        if c_i == True:
+        if c_i == True or set(c_s) == 1:
             random.shuffle(c_idx)
             c_idx = c_idx[0:(int(cper*nums_c))]
         else:
@@ -212,6 +246,7 @@ class MulTs(TimeSeries):
                 cache_idx.extend(c_idx[3*i:3*i+3])
             c_idx = cache_idx
         if c_ii != None:
+            # TODO
             c_idx = self.columns[:3]
         tsg = self.copy()
         g = tsg.loc[gindex,c_idx] = None

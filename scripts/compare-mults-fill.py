@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 LastEditors  : Scallions
-LastEditTime : 2020-10-19 10:55:18
+LastEditTime : 2020-11-17 20:25:22
 FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -28,7 +28,7 @@ def load_data(lengths=3, epoch=6):
     Returns:
         [mts]: mts s
     """
-    dir_path = './data/an/'
+    dir_path = './data/greenland/'
     tss = []
     files = os.listdir(dir_path)
     for file_ in files:
@@ -41,7 +41,7 @@ def load_data(lengths=3, epoch=6):
         random.shuffle(tss)
         for i in range(0, nums - lengths, lengths):
             try:
-                mts = tool.concat_multss(tss[i:i + lengths])
+                mts = tool.concat_u_multss(tss[i:i + lengths])
             except:
                 continue
             rtss.append(mts)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     # 定义 数据集
     clip_length = 400
-    tss = load_data(lengths=4, epoch=80)
+    tss = load_data(lengths=20, epoch=20)
     tsls = [ts.get_longest() for ts in tss if len(ts) > clip_length]
     tsls = [tsl for tsl in tsls if len(tsl) > clip_length]
     if len(tsls) == 0:
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     # 定义比较的 gap size
     gap_sizes = [
-        # 3, 
+        2, 
         # 5, 
         7,
         # 20,
@@ -75,13 +75,13 @@ if __name__ == '__main__':
     # 定义比较的filler 种类
     fillers = [
         ### imputena
-        fill.MICEFiller,
+        # fill.MICEFiller,
 
         ### missingpy
         fill.MissForestFiller,
 
         ### miceforest
-        fill.MiceForestFiller,
+        # fill.MiceForestFiller,
 
         ### para
         # fill.RandomForestFiller,
@@ -94,27 +94,28 @@ if __name__ == '__main__':
         # fill.SoftImputeFiller,
         # fill.IterativeSVDFiller,
         fill.IterativeImputerFiller,
-        fill.MatrixFactorizationFiller,
+        # fill.MatrixFactorizationFiller,
         # fill.BiScalerFiller,
         # fill.NuclearNormMinimizationFiller,
 
         ### scipy
         # fill.SLinearFiller, # 一阶样条插值
-        # fill.SplineFiller, # 三次样条
+        fill.SplineFiller, # 三次样条
         # fill.AkimaFiller,
-        # fill.PolyFiller, # 二阶多项式插值÷
+        fill.PolyFiller, # 二阶多项式插值÷
         # fill.PiecewisePolynomialFiller, 
         # fill.KroghFiller, # overflow
         # fill.QuadraticFiller, # 二次
         # fill.BarycentricFiller, # overflow
         # fill.FromDerivativesFiller,
-        # fill.PchipFiller, # 三阶 hermite 插值
+        fill.PchipFiller, # 三阶 hermite 插值
 
         ### matlab
         fill.RegEMFiller, 
 
         ### self
-        fill.MLPFiller,
+        # fill.BritsFiller,
+        # fill.MLPFiller,
         # fill.ConvFiller,
         # fill.SSAFiller,
     ]
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     result.loc['time'] = 0
     for gap_size in gap_sizes:
         val_tss = [(ts, *ts.make_gap(gap_size, cache_size=30, cper=0.5, c_i
-            =False)) for ts in tsls]
+            =True)) for ts in tsls]
         for i, filler in enumerate(fillers):
             res = None
             start = time.time()
@@ -135,14 +136,14 @@ if __name__ == '__main__':
                 if len(tsl) < 380:
                     continue
                 # 去趋势
-                # trends, noises = tool.remove_trend(tsl)
-                # noises.loc[gidx, gridx] = None
-                # noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
-                # tsc = filler.fill(noises)
-                # tsc = trends + tsc
-                # tsc = Mts(datas=tsc,indexs=tsc.index, columns=tsc.columns)
+                trends, noises = tool.remove_trend(tsl)
+                noises.loc[gidx, gridx] = None
+                noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+                tsc = filler.fill(noises)
+                tsc = trends + tsc
+                tsc = Mts(datas=tsc,indexs=tsc.index, columns=tsc.columns)
 
-                tsc = filler.fill(tsg)
+                # tsc = filler.fill(tsg)
                 tsl.columns = tsc.columns
                 this_res = tool.fill_res(tsc, tsl, gidx, gridx)
                 if not isinstance(res, pd.DataFrame):

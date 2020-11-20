@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-LastEditTime : 2020-10-13 11:18:49
+LastEditTime : 2020-11-20 10:53:14
 LastEditors  : Scallions
 FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -26,7 +26,7 @@ class Filler:
 
 class RegEMFiller(Filler):
     name = "RegEM"
-    
+    cnname = "RegEM"
     @staticmethod
     def fill(ts):
         tss = regem.fill(ts)
@@ -180,6 +180,7 @@ class AkimaFiller(Filler):
 
 class PolyFiller(Filler):
     name = "Poly"
+    cnname = "正交多项式"
     @staticmethod
     def fill(ts, order=2):
         tsc = ts.complete()
@@ -189,6 +190,7 @@ class PolyFiller(Filler):
 
 class SplineFiller(Filler):
     name = "Spline"
+    cnname = "三次样条"
     @staticmethod
     def fill(ts, order=3):
         tsc = ts.complete()
@@ -236,6 +238,7 @@ class FromDerivativesFiller(Filler):
 
 class PchipFiller(Filler):
     name = "Pchip"
+    cnname = "埃尔米特多项式"
     @staticmethod
     def fill(ts):
         tsc = ts.complete()
@@ -359,6 +362,7 @@ class NuclearNormMinimizationFiller(Filler):
 
 class MissForestFiller(Filler):
     name = "MissForest"
+    cnname = "随机森林回归"
     @staticmethod
     def fill(ts):
         from missingpy import MissForest
@@ -401,12 +405,12 @@ class MiceForestFiller(Filler):
         tsc = ts.complete()
         kernel = mf.MultipleImputedKernel(
             tsc,
-            datasets=4,
+            datasets=5,
             save_all_iterations=True,
             random_state=1991
         )
-        kernel.mice(3)
-        tc = kernel.complete_data(2)
+        kernel.mice(5)
+        tc = kernel.complete_data(4)
         return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)    
 
 class GainFiller(Filler):
