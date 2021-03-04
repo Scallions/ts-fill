@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-08-29 16:05:38
 LastEditors  : Scallions
-LastEditTime : 2020-11-20 11:08:38
+LastEditTime : 2020-12-15 14:24:47
 FilePath     : /gps-ts/scripts/pca_analysis.py
 Description  : 
 '''
@@ -93,7 +93,7 @@ for k,v in data.items():
     # data[k] = v[b[0],:]
     data[k] = v
 
-dd = -1
+dd = 0
 
 # fig, subs = plt.subplots(len(names),1, sharex=True)
 i = 0

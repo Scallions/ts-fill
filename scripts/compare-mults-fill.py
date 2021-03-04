@@ -2,7 +2,7 @@
 @Author       : Scallions
 @Date         : 2020-03-25 08:39:45
 LastEditors  : Scallions
-LastEditTime : 2020-11-17 20:25:22
+LastEditTime : 2020-11-21 19:19:06
 FilePath     : /gps-ts/scripts/compare-mults-fill.py
 @Description  : 
 '''
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     # 定义 数据集
     clip_length = 400
-    tss = load_data(lengths=20, epoch=20)
+    tss = load_data(lengths=15, epoch=2000)
     tsls = [ts.get_longest() for ts in tss if len(ts) > clip_length]
     tsls = [tsl for tsl in tsls if len(tsl) > clip_length]
     if len(tsls) == 0:
@@ -90,10 +90,10 @@ if __name__ == '__main__':
         # fill.MagicFiller,
         
         ### fancyimpute
-        fill.KNNFiller,
+        # fill.KNNFiller,
         # fill.SoftImputeFiller,
         # fill.IterativeSVDFiller,
-        fill.IterativeImputerFiller,
+        # fill.IterativeImputerFiller,
         # fill.MatrixFactorizationFiller,
         # fill.BiScalerFiller,
         # fill.NuclearNormMinimizationFiller,

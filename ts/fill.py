@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-LastEditTime : 2020-11-20 10:53:14
+LastEditTime : 2021-03-01 16:25:47
 LastEditors  : Scallions
 FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -359,16 +359,32 @@ class NuclearNormMinimizationFiller(Filler):
         tc = NuclearNormMinimization().fit_transform(tsc)
         return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
 
+class SVMFiller(Filler):
+    name = "SVM"
+    cnname = "支持向量机回归"
+    @staticmethod
+    def fill(ts):
+        from sklearn.experimental import enable_iterative_imputer
+        from sklearn.impute import IterativeImputer
+        from sklearn import svm
+        # from sklearn import linear_model
+        tsc = ts.complete()
+        tc = IterativeImputer(estimator=svm.SVR()).fit_transform(tsc)
+        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
 
 class MissForestFiller(Filler):
     name = "MissForest"
     cnname = "随机森林回归"
     @staticmethod
-    def fill(ts):
+    def fill(ts, oob=False):
         from missingpy import MissForest
         tsc = ts.complete()
-        tc = MissForest().fit_transform(tsc)
-        return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+        if not oob:
+            tc = MissForest().fit_transform(tsc)
+            return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
+        else:
+            tc, oobs, oobp = MissForest(oob_score=oob).fit_transform(tsc) 
+            return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns), oobs, oobp
 
 class MICEFiller(Filler):
     name = "MICE"

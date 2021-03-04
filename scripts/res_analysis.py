@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-08-29 16:05:38
 LastEditors  : Scallions
-LastEditTime : 2020-11-20 14:45:17
+LastEditTime : 2020-12-15 14:26:57
 FilePath     : /gps-ts/scripts/res_analysis.py
 Description  : 
 '''
@@ -68,6 +68,7 @@ fillers = [
     # fill.MagicFiller,
 
     ### self
+    # fill.SVMFiller,
     # fill.BritsFiller,
     # fill.MLPFiller,
     # fill.GainFiller,
@@ -100,7 +101,7 @@ for k,v in data.items():
     # data[k] = v[b[0][0]:b[0][-1],:]
     data[k] = v[b[0],:]
 
-dd = -3
+dd = 0
 
 ## 相关系数
 raw_s = pd.Series(data["raw"][:,c[0][dd]])
@@ -120,7 +121,7 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 # fig, subs = plt.subplots((len(names)-1)//3,3, sharex=True)
 # fig = plt.figure(figsize=(8, 12))
 fig, subs = plt.subplots(2, 3, sharex=True,figsize=(12,8))
-subs[-1,-1].axis("off")
+
 # gs = gridspec.GridSpec(2, 3, height_ratios=[1, 1])
 i = 0
 for k, x in data.items():
@@ -148,13 +149,13 @@ for k, x in data.items():
     sns.regplot(data["raw"][:,c[0][dd]], x[:,c[0][dd]],ax=subs[(i-1)//3][(i-1)%3],color='steelblue',scatter_kws={'s':2},line_kws={"linewidth":1})
     var = stats.pearsonr(data["raw"][:,c[0][dd]], x[:,c[0][dd]])[0]
     subs[(i-1)//3][(i-1)%3].set_xlabel(cnnames[i])
-    subs[(i-1)//3][(i-1)%3].text(0.8, 0.8,f'r:{var:.2f}',
+    subs[(i-1)//3][(i-1)%3].text(0.2, 0.8,f'r:{var:.2f}',
      horizontalalignment='center',
      verticalalignment='center',
      transform = subs[(i-1)//3][(i-1)%3].transAxes,
      bbox=dict(boxstyle="round",ec=(1., 0.5, 0.5),fc=(1., 0.8, 0.8),))
-    
     i += 1
 
+subs[-1,-1].axis("off")
 
 plt.show()

@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-11-15 16:03:18
 LastEditors  : Scallions
-LastEditTime : 2020-11-15 16:17:40
+LastEditTime : 2021-03-03 15:10:44
 FilePath     : /gps-ts/scripts/plot_site_greenland.py
 Description  : 
 '''
@@ -26,7 +26,7 @@ fig = pygmt.Figure()
 
 # fig.basemap(region=[-109,-45,-78,-59], projection="S-77/-90/5i", frame=True)
 fig.basemap(region="-75/-10/58/86", projection="L-40/30/35/25/6i", frame=True)
-fig.coast(shorelines=True, water="lightblue")
+fig.coast(shorelines=True, water="lightblue", resolution="l")
 fig.plot(x=df.iloc[:,3],y=df.iloc[:,2], style="c0.1c", color="red", pen="black")
-# fig.text(text=df.iloc[:,1].to_list(),x=df.iloc[:,3],y=df.iloc[:,2])
+fig.text(text=df.iloc[:,1].to_list(),x=df.iloc[:,3],y=df.iloc[:,2], justify="ML")
 fig.savefig("greenland.jpg")

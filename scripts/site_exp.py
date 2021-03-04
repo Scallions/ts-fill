@@ -2,7 +2,7 @@
 Author       : Scallions
 Date         : 2020-08-23 09:16:21
 LastEditors  : Scallions
-LastEditTime : 2020-11-20 20:38:20
+LastEditTime : 2021-03-01 16:10:51
 FilePath     : /gps-ts/scripts/site_exp.py
 Description  : 
 '''
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # fill.MagicFiller,
         
         ### fancyimpute
-        fill.KNNFiller, # **
+        # fill.KNNFiller, # **
         # fill.SoftImputeFiller,
         # fill.IterativeSVDFiller,
         # fill.IterativeImputerFiller, # **
@@ -147,6 +147,7 @@ if __name__ == "__main__":
         fill.RegEMFiller, 
 
         ### self
+        # fill.SVMFiller,
         # fill.MLPFiller,
         # fill.BritsFiller,
         # fill.GainFiller,
@@ -157,14 +158,14 @@ if __name__ == "__main__":
     # 点的大小
     pltsize = 2
 
-    gap_size = 7
+    gap_size = 180
     ltss = [[names,ts.get_longest()] for names,ts in tss if len(ts.get_longest()) > 400]
     # val_tss = [(ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, c_i=False, c_ii=['n0,e0,u0'], gmax=gap_size)) for ts in ltss]
-    val_tss = [(names,ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, gmax=gap_size* 25)) for names, ts in ltss]
+    val_tss = [(names,ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, gmax=gap_size* 1)) for names, ts in ltss]
     mm = []
     for names, tsl, tsg, gidx, gridx in val_tss:
         # set up gidx
-        # gidx = list(pd.date_range('2017/01/01','2017/07/01'))
+        # gidx = list(pd.date_range('2016/07/15','2017/01/15'))
         # gidx = gidx + list(pd.date_range('2018/7/1', '2018/8/1'))
         # gidx = gidx + list(pd.date_range('2017/7/20', '2017/8/20'))
         # gidx = gidx + list(pd.date_range('2017/5/1', '2017/6/1'))
@@ -201,8 +202,8 @@ if __name__ == "__main__":
         else:
             continue
 
-        tsg.to_csv("res/gap.csv")
-        tsl.to_csv("res/raw.csv")
+        tsg.to_csv(f"res/{gap_size}/gap.csv")
+        tsl.to_csv(f"res/{gap_size}/raw.csv")
         for i, filler in enumerate(fillers):
             tsc = filler.fill(noises)
             tsc = trends + tsc
@@ -212,7 +213,7 @@ if __name__ == "__main__":
             # subs[i+1].scatter(tsl.index, tsc[gridx[2]], s=pltsize)
             # subs[i+1].scatter(tsl.index, tsg[gridx[2]], s=pltsize, c="black") 
             # subs[i+1].set_ylabel(filler.name)
-            tsc.to_csv("res/"+filler.name+".csv")
+            tsc.to_csv(f"res/{gap_size}/"+filler.name+".csv")
 
         # break
 
