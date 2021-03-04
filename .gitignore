@@ -162,7 +162,14 @@ tempCodeRunnerFile.py
 # models
 models/*
 
+log 
 log/*
+
+models
+models/*
+
+.idea 
+.idea/*
 
 res/*
 results/*
