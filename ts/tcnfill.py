@@ -1,9 +1,9 @@
 '''
 @Author       : Scallions
 @Date         : 2020-04-17 18:38:41
-@LastEditors  : Scallions
-@LastEditTime : 2020-04-17 19:37:03
-@FilePath     : /gps-ts/ts/tcnfill.py
+LastEditors  : Scallions
+LastEditTime : 2021-03-04 21:28:23
+FilePath     : /gps-ts/ts/tcnfill.py
 @Description  : 
 '''
 
@@ -136,9 +136,9 @@ class TCN(torch.nn.Module):
 
 
 def load_model(net, save_path):
-    checkpoint = torch.load(save_path)
+    #checkpoint = torch.load(save_path)
     model = net()
-    model.load_state_dict(checkpoint['model_state_dict'])
+    # model.load_state_dict(checkpoint['model_state_dict'])
     return model
 
 

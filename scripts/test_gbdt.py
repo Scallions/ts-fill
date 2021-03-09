@@ -147,7 +147,7 @@ if __name__ == '__main__':
         fill.PchipFiller, # 三阶 hermite 插值
 
         ### matlab
-        fill.RegEMFiller, 
+        # fill.RegEMFiller, 
 
         ### self
         # fill.BritsFiller,
@@ -161,8 +161,8 @@ if __name__ == '__main__':
     gap_rates = [
         0.1,
         0.2,
-        # 0.3,
-        # 0.5
+        0.3,
+        0.5
     ]
 
     ltss = []
@@ -188,7 +188,7 @@ if __name__ == '__main__':
         )
         rr = {}
         j = 0
-        while j < 2:
+        while j < 20:
             val_tss = [(names,ts, *ts.make_gap(gap_size,per=gap_rate, cper=0.5)) for names, ts in ltss]
             for names, tsl, tsg, gidx, gridx in val_tss:
                 ### 单个数据集插值
@@ -205,18 +205,17 @@ if __name__ == '__main__':
                     # tsc.to_csv(f"res/{gap_size}/"+filler.name+".csv")
                     # print(filler.name, (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).std().mean())
                     if filler.name in rr:
-                        temp = (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).to_numpy().reshape(-1)
-                        rr[filler.name] = np.concatenate([rr[filler.name],temp])
+                        rr[filler.name][0] += ((tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx])**2).sum().sum()
+                        rr[filler.name][1] += len(gidx) * len(gridx)
                     else:
-                        rr[filler.name] = (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).to_numpy().reshape(-1)
+                        rr[filler.name] = [((tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx])**2).sum().sum(),len(gidx) * len(gridx)]
                 ### 统计插值方法结果
             j+=1
             print(f"\r{j}/200", end="")
         for filler in fillers:
-            res[filler.name].iloc[-1] = rr[filler.name].std()
-            pd.DataFrame(rr[filler.name]).to_csv(f"res/rate/{filler.name}-{gap_rate}.csv")
+            res[filler.name].iloc[-1] = (rr[filler.name][0] / rr[filler.name][1]) ** 0.5
     print(res)
-    res.to_csv("res/rate.csv")
+    # res.to_csv("res/rate.csv")
 
 
 
