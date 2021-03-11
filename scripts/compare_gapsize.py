@@ -165,6 +165,8 @@ if __name__ == '__main__':
 
     gap_rate = 0.2
 
+    epoch = 2
+
     ltss = []
     while len(ltss) == 0:
         tss = load_data2(lengths=20, length=200)
@@ -173,7 +175,8 @@ if __name__ == '__main__':
         # val_tss = [(names,ts, *ts.make_gap(gap_size, per=0.2, cper=0.5)) for names, ts in ltss]
         ltss = ltss[:1]
     # 遍历gap rates
-    res = pd.DataFrame(columns=['gap_rate']+list(map(lambda x:x.name, fillers)))
+    res = pd.DataFrame(columns=['gap_size']+list(map(lambda x:x.name, fillers)))
+    log = ""
     for gap_size in gap_sizes:
         ## 生成 数据集
         # - 筛选数据
@@ -188,7 +191,7 @@ if __name__ == '__main__':
         )
         rr = {}
         j = 0
-        while j < 200:
+        while j < epoch:
             val_tss = [(names,ts, *ts.make_gap(gap_size,per=gap_rate, cper=0.5)) for names, ts in ltss]
             for names, tsl, tsg, gidx, gridx in val_tss:
                 ### 单个数据集插值
@@ -199,11 +202,17 @@ if __name__ == '__main__':
                 # noises.to_csv("res/raw.csv")
                 # noises.loc[gidx, gridx] = None
                 # noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+                if j == epoch - 1:
+                    tsg.to_csv(f"res/gap/gap-{gap_size}.csv")
+                    tsl.to_csv(f"res/gap/raw-{gap_size}.csv")
+                    log += f"gap_size: {gap_size}\nnames: {names}\ngidx: {gidx}\ngridx: {gridx}\n"
                 for i, filler in enumerate(fillers):
                     tsc = filler.fill(tsg)
                     # tsc = trends + tsc
                     # tsc.to_csv(f"res/{gap_size}/"+filler.name+".csv")
                     # print(filler.name, (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).std().mean())
+                    if j == epoch - 1:
+                        tsc.to_csv(f"res/gap/{filler.name}-{gap_size}-fill.csv")
                     if filler.name in rr:
                         temp = (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).to_numpy().reshape(-1)
                         rr[filler.name] = np.concatenate([rr[filler.name],temp])
@@ -214,9 +223,11 @@ if __name__ == '__main__':
             print(f"\r{j}/200", end="")
         for filler in fillers:
             res[filler.name].iloc[-1] = rr[filler.name].std()
-            pd.DataFrame(rr[filler.name]).to_csv(f"res/gap/{filler.name}-{gap_rate}.csv")
+            pd.DataFrame(rr[filler.name]).to_csv(f"res/gap/{filler.name}-{gap_size}.csv", index=False)
     print(res)
     res.to_csv("res/gap.csv")
+    with open("res/gaplog.txt", "w") as f:
+        f.write(log)
 
 
 
