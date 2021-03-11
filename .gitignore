@@ -175,3 +175,5 @@ res/*
 results/*
 
 ts.zip
+
+.vscode
