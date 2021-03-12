@@ -113,8 +113,6 @@ if __name__ == '__main__':
         ### imputena
         # fill.MICEFiller,
 
-        ### missingpy
-        fill.MissForestFiller,
 
         ### miceforest
         # fill.MiceForestFiller,
@@ -154,7 +152,9 @@ if __name__ == '__main__':
         # fill.MLPFiller,
         # fill.ConvFiller,
         # fill.SSAFiller,
-        fill.GBDT,
+        # fill.GBDT,
+        ### missingpy
+        fill.MissForestFiller,
     ]
     gap_sizes = [
         2,
@@ -165,11 +165,13 @@ if __name__ == '__main__':
 
     gap_rate = 0.2
 
-    epoch = 2
+    epoch = 20
+
+    tool.set_seed()
 
     ltss = []
     while len(ltss) == 0:
-        tss = load_data2(lengths=20, length=200)
+        tss = load_data2(lengths=20, length=2)
         ltss = [[names,ts.get_longest()] for names,ts in tss if len(ts.get_longest()) > 400]
         # val_tss = [(ts, *ts.make_gap(gap_size,cache_size=100, cper=0.5, c_i=False, c_ii=['n0,e0,u0'], gmax=gap_size)) for ts in ltss]
         # val_tss = [(names,ts, *ts.make_gap(gap_size, per=0.2, cper=0.5)) for names, ts in ltss]
@@ -202,23 +204,28 @@ if __name__ == '__main__':
                 # noises.to_csv("res/raw.csv")
                 # noises.loc[gidx, gridx] = None
                 # noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
-                if j == epoch - 1:
-                    tsg.to_csv(f"res/gap/gap-{gap_size}.csv")
-                    tsl.to_csv(f"res/gap/raw-{gap_size}.csv")
-                    log += f"gap_size: {gap_size}\nnames: {names}\ngidx: {gidx}\ngridx: {gridx}\n"
+                # if j == epoch - 1:
+                tsg.to_csv(f"res/gap/gap-{gap_size}-{j}.csv")
+                tsl.to_csv(f"res/gap/raw-{gap_size}-{j}.csv")
+                log += f"gap_size: {gap_size}\nnames: {names}\ngidx: {gidx}\ngridx: {gridx}\n"
                 for i, filler in enumerate(fillers):
                     tsc = filler.fill(tsg)
                     # tsc = trends + tsc
                     # tsc.to_csv(f"res/{gap_size}/"+filler.name+".csv")
                     # print(filler.name, (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).std().mean())
-                    if j == epoch - 1:
-                        tsc.to_csv(f"res/gap/{filler.name}-{gap_size}-fill.csv")
+                    if tsc.isna().sum().sum() != 0:
+                        print("nan")
+                        break 
+                    # if j == epoch - 1:
+                    tsc.to_csv(f"res/gap/{filler.name}-{gap_size}-fill-{j}.csv")
                     if filler.name in rr:
                         temp = (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).to_numpy().reshape(-1)
                         rr[filler.name] = np.concatenate([rr[filler.name],temp])
                     else:
                         rr[filler.name] = (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).to_numpy().reshape(-1)
                 ### 统计插值方法结果
+            if tsc.isna().sum().sum() != 0:
+                continue
             j+=1
             print(f"\r{j}/200", end="")
         for filler in fillers:

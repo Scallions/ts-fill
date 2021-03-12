@@ -1,7 +1,7 @@
 '''
 @Author: Scallions
 @Date: 2020-02-07 13:51:31
-LastEditTime : 2021-03-09 11:29:35
+LastEditTime : 2021-03-11 19:41:48
 LastEditors  : Scallions
 FilePath     : /gps-ts/ts/fill.py
 @Description: gap fill functions and return a new ts
@@ -26,6 +26,7 @@ class Filler:
 
 class RegEMFiller(Filler):
     name = "RegEM"
+    fname = "RegEM"
     cnname = "RegEM"
     @staticmethod
     def fill(ts):
@@ -180,6 +181,7 @@ class AkimaFiller(Filler):
 
 class PolyFiller(Filler):
     name = "Poly"
+    fname = "Orthogonal Polynomial"
     cnname = "正交多项式"
     @staticmethod
     def fill(ts, order=2):
@@ -189,6 +191,7 @@ class PolyFiller(Filler):
         return tss
 
 class SplineFiller(Filler):
+    fname = "Cubic Spline"
     name = "Spline"
     cnname = "三次样条"
     @staticmethod
@@ -238,6 +241,7 @@ class FromDerivativesFiller(Filler):
 
 class PchipFiller(Filler):
     name = "Pchip"
+    fname = "Hermite"
     cnname = "埃尔米特多项式"
     @staticmethod
     def fill(ts):
@@ -374,6 +378,7 @@ class SVMFiller(Filler):
 
 class MissForestFiller(Filler):
     name = "MissForest"
+    fname = "MissForest"
     cnname = "随机森林回归"
     @staticmethod
     def fill(ts, oob=False):

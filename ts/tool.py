@@ -16,6 +16,14 @@ import pandas as pd
 from loguru import logger
 from PyAstronomy import pyasl
 import random
+import os 
+import torch
+
+def set_seed(seed = 1):
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    torch.manual_seed(seed)
 
 
 def dy2jd(dy):

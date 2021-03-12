@@ -27,8 +27,8 @@ def fill(ts):
     Returns:
         ts: ts after fill
     """
-    fp = "/Volumes/SSD/Code/Matlab/RegEM/data/out.csv"
-    fout = "/Volumes/SSD/Code/Matlab/RegEM/data/fill.csv"
+    fp = "/home/cyf/Code/gps-fill/RegEM/data/out.csv"
+    fout = "/home/cyf/Code/gps-fill/RegEM/data/fill.csv"
     eng = matlab.engine.connect_matlab()
     eng.edit('regem', nargout=1)
     ts = ts.complete()
