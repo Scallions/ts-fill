@@ -45,7 +45,7 @@ def load_data():
         rtss.append(mts)
     return rtss
 TSS = None
-def load_data2(lengths=3, epoch=6, length=None, minlen=None):
+def load_data2(lengths=3, epoch=6, length=None, minlen=None, remove_trend=True):
     """load data
     
     Args:
@@ -63,6 +63,8 @@ def load_data2(lengths=3, epoch=6, length=None, minlen=None):
         for file_ in ['BLAS.NA.tenv3', 'DGJG.NA.tenv3', 'DKSG.NA.tenv3', 'HJOR.NA.tenv3', 'HMBG.NA.tenv3', 'HRDG.NA.tenv3', 'JGBL.NA.tenv3', 'JWLF.NA.tenv3', 'KMJP.NA.tenv3', 'KMOR.NA.tenv3', 'KUAQ.NA.tenv3', 'KULL.NA.tenv3', 'LBIB.NA.tenv3', 'LEFN.NA.tenv3', 'MARG.NA.tenv3', 'MSVG.NA.tenv3', 'NRSK.NA.tenv3', 'QAAR.NA.tenv3', 'UTMG.NA.tenv3', 'YMER.NA.tenv3']:
             if '.tenv3' in file_:
                 ts_temp = Mts(dir_path + file_, data.FileType.Ngl)
+                if remove_trend:
+                    _, ts_temp  = tool.remove_trend(ts_temp)
                 ts_temp = (ts_temp - ts_temp.min()) / (ts_temp.max()-ts_temp.min())
                 ts_temp = Mts.from_df(ts_temp)
                 TSS.append((file_, ts_temp))
@@ -113,8 +115,7 @@ if __name__ == '__main__':
         ### imputena
         # fill.MICEFiller,
 
-        ### missingpy
-        fill.MissForestFiller,
+
 
         ### miceforest
         # fill.MiceForestFiller,
@@ -155,6 +156,9 @@ if __name__ == '__main__':
         # fill.ConvFiller,
         # fill.SSAFiller,
         # fill.GBDT,
+
+        ### missingpy
+        fill.MissForestFiller,
     ]
     gap_size = 7
 
@@ -165,9 +169,11 @@ if __name__ == '__main__':
         0.4
     ]
 
-    epoch = 40
+    epoch = 20
 
-    tool.set_seed(743)
+    tool.set_seed(12)
+
+    remove_trend = False
 
 
     ltss = []
@@ -200,19 +206,24 @@ if __name__ == '__main__':
             for names, tsl, tsg, gidx, gridx in val_tss:
                 ### 单个数据集插值
                 # - 去除趋势项
-                # trends, noises = tool.remove_trend(tsl)
+                if remove_trend:
+                    trends, noises = tool.remove_trend(tsl)
                 # tsg = tsl.copy()
                 # tsg.loc[gidx, gridx] = None
-                # noises.to_csv("res/raw.csv")
-                # noises.loc[gidx, gridx] = None
-                # noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
+                    noises.to_csv("res/raw.csv")
+                    noises.loc[gidx, gridx] = None
+                    noises = Mts(datas=noises,indexs=noises.index,columns=noises.columns)
                 # if j == epoch - 1:
                 log += f"gap_rate: {gap_rate}\nnames: {names}\ngidx: {gidx}\ngridx: {gridx}\n"
                 tsg.to_csv(f"res/rate/gap-{gap_rate}-{j}.csv")
                 tsl.to_csv(f"res/rate/raw-{gap_rate}-{j}.csv")
                 for i, filler in enumerate(fillers):
-                    tsc = filler.fill(tsg)
-                    # tsc = trends + tsc
+                    # tsc = filler.fill(tsg)
+                    if remove_trend:
+                        tsc = filler.fill(noises)
+                        tsc = trends + tsc
+                    else:
+                        tsc = filler.fill(tsg)
                     # tsc.to_csv(f"res/{gap_size}/"+filler.name+".csv")
                     # print(filler.name, (tsl.loc[gidx,gridx] - tsc.loc[gidx,gridx]).std().mean())
                     if tsc.isna().sum().sum() != 0:
@@ -237,6 +248,7 @@ if __name__ == '__main__':
     res.to_csv("res/rate.csv")
     with open("res/ratelog.txt", "w") as f:
         f.write(log)
+        f.write(str(res))
 
 
 

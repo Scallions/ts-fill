@@ -172,6 +172,7 @@ models/*
 .idea/*
 
 res/*
+res2/
 results/*
 
 ts.zip

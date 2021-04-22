@@ -33,7 +33,7 @@ if __name__ == '__main__':
         0.5
     ]
 
-    for gap_size in gap_sizes:
+    for gap_size in gap_rates:
 
         print(f"+++++ gap size: {gap_size} +++++")
         for i, filler in enumerate(fillers):
@@ -42,14 +42,13 @@ if __name__ == '__main__':
             rss = None
             angs = None
             for j in range(20):
-                raw = pd.read_csv(f"res/gap/raw-{gap_size}-{j}.csv",index_col="jd",parse_dates=True)
-                gap = pd.read_csv(f"res/gap/gap-{gap_size}-{j}.csv",index_col="jd",parse_dates=True)
+                raw = pd.read_csv(f"res/rate/raw-{gap_size}-{j}.csv",index_col="jd",parse_dates=True)
+                gap = pd.read_csv(f"res/rate/gap-{gap_size}-{j}.csv",index_col="jd",parse_dates=True)
                 # find cidx and ridx
                 a = gap.isna()
                 r_idx = np.where(np.any(a, axis=1))[0]
                 c_idx = np.where(np.any(a, axis=0))[0]
                 # row pcaX
-                # raw = raw.iloc[r_idx,c_idx]
                 X = mean(raw).T
                 n, m = X.shape 
                 C = np.dot(X, X.T) / (n-1)
@@ -62,8 +61,7 @@ if __name__ == '__main__':
                 # raw1 = np.dot(X.T,eigen_vecs)[:,0].real
                 raw1 = eigen_vecs[:,0]
 
-                filldata = pd.read_csv(f"res/gap/{filler.name}-{gap_size}-fill-{j}.csv",index_col="jd",parse_dates=True) 
-                # filldata = filldata.iloc[r_idx,c_idx]
+                filldata = pd.read_csv(f"res/rate/{filler.name}-{gap_size}-fill-{j}.csv",index_col="jd",parse_dates=True) 
                 X = mean(filldata).T
                 n, m = X.shape 
                 C = np.dot(X, X.T) / (n-1)
@@ -87,14 +85,12 @@ if __name__ == '__main__':
                     ress = res.real[:3]
                     lss = [distance]
                     rss = [r[2]]
-                    # angs = [np.cos(angle)]
-                    angs = [ang]
+                    angs = [np.cos(angle)]
                 else:
                     ress = np.vstack([ress,res.real[:3]])
                     lss.append(distance)
                     rss.append(r[2])
-                    # angs.append(np.cos(angle))
-                    angs.append(ang)
+                    angs.append(np.cos(angle))
             print(filler.name, ress.mean(axis=0),np.mean(rss),np.mean(lss),np.mean(angs))
 
 

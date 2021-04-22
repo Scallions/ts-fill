@@ -35,11 +35,11 @@ if __name__ == '__main__':
         0.4,
     ]
 
-    for gap_size in gap_sizes:
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    fig, subs = plt.subplots(4, 5, sharex=True,figsize=(12,8))
+    for k, gap_size in enumerate(gap_sizes):
         print(f"+++++ gap size: {gap_size} +++++")
 
-        plt.rcParams['font.sans-serif'] = ['SimHei']
-        fig, subs = plt.subplots(2, 3, sharex=True,figsize=(12,8))
         for i, filler in enumerate(fillers):
             raw_s = None
             fills = None
@@ -52,23 +52,28 @@ if __name__ == '__main__':
                 c_idx = np.where(np.any(a, axis=0))[0]
                 filldata = pd.read_csv(f"res/gap/{filler.name}-{gap_size}-fill-{j}.csv",index_col="jd",parse_dates=True) 
                 if raw_s is None:
-                    raw_s = raw.iloc[:,c_idx[0]].to_numpy()
-                    fills = filldata.iloc[:,c_idx[0]].to_numpy()
+                    raw_s = raw.iloc[r_idx,c_idx].to_numpy()
+                    fills = filldata.iloc[r_idx,c_idx].to_numpy()
                 else:
-                    raw_s = np.concatenate([raw.iloc[:,c_idx[0]].to_numpy(),raw_s])
-                    fills = np.concatenate([filldata.iloc[:,c_idx[0]].to_numpy(), fills])
-            sns.regplot(raw_s, fills,ax=subs[i//3][i%3],color='steelblue',scatter_kws={'s':2},line_kws={"linewidth":1})
+                    raw_s = np.concatenate([raw.iloc[r_idx,c_idx].to_numpy(),raw_s])
+                    fills = np.concatenate([filldata.iloc[r_idx,c_idx].to_numpy(), fills])
+            raw_s = raw_s.reshape(-1)
+            fills = fills.reshape(-1)
+            sns.regplot(raw_s.reshape(-1), fills.reshape(-1),ax=subs[k][i],color='steelblue',scatter_kws={'s':2},line_kws={"linewidth":1})
             var = stats.pearsonr(raw_s, fills)[0]
-            subs[i//3][i%3].set_xlabel(filler.fname)
-            subs[i//3][i%3].text(0.2, 0.8,f'r:{var:.2f}',
+            if k == 3:
+                subs[k][i].set_xlabel(filler.fname, fontsize=12)
+            if i == 0:
+                subs[k][i].set_ylabel(f"{gap_size}",fontsize=12)
+            subs[k][i].text(0.2, 0.8,f'r:{var:.2f}',
             horizontalalignment='center',
             verticalalignment='center',
-            transform = subs[i//3][i%3].transAxes,
+            transform = subs[k][i].transAxes,
             bbox=dict(boxstyle="round",ec=(1., 0.5, 0.5),fc=(1., 0.8, 0.8),))
             r = pearsonr(raw_s, fills)
             print(filler.name, r[0])
 
 
-        subs[-1,-1].axis("off")
-        plt.savefig(f"fig/gap-rp-{gap_size}.png")
+    # subs[-1,-1].axis("off")
+    plt.savefig(f"fig/gap-rp.png")
             
