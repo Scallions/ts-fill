@@ -33,7 +33,8 @@ if __name__ == '__main__':
         print(f"+++++ gap size: {gap_size} +++++")
         for filler in fillers:
             filldata = pd.read_csv(f"res/rate/{filler.name}-{gap_size}.csv") 
-            print(filler.name,filldata.abs().mean()*100)
+            # print(filler.name,filldata.abs().mean()*100)
+            print(filler.name,filldata.abs().mean())
             
 
 

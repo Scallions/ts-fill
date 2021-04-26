@@ -61,6 +61,7 @@ def load_data2(lengths=3, epoch=6, length=None, minlen=None, remove_trend=True):
     if TSS is None:
         TSS = []
         for file_ in ['BLAS.NA.tenv3', 'DGJG.NA.tenv3', 'DKSG.NA.tenv3', 'HJOR.NA.tenv3', 'HMBG.NA.tenv3', 'HRDG.NA.tenv3', 'JGBL.NA.tenv3', 'JWLF.NA.tenv3', 'KMJP.NA.tenv3', 'KMOR.NA.tenv3', 'KUAQ.NA.tenv3', 'KULL.NA.tenv3', 'LBIB.NA.tenv3', 'LEFN.NA.tenv3', 'MARG.NA.tenv3', 'MSVG.NA.tenv3', 'NRSK.NA.tenv3', 'QAAR.NA.tenv3', 'UTMG.NA.tenv3', 'YMER.NA.tenv3']:
+        # for file_ in files:
             if '.tenv3' in file_:
                 ts_temp = Mts(dir_path + file_, data.FileType.Ngl)
                 if remove_trend:
@@ -169,9 +170,9 @@ if __name__ == '__main__':
         0.4
     ]
 
-    epoch = 20
+    epoch = 1000
 
-    tool.set_seed(12)
+    tool.set_seed(6)
 
     remove_trend = False
 

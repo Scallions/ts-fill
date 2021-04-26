@@ -43,7 +43,7 @@ if __name__ == '__main__':
         for i, filler in enumerate(fillers):
             raw_s = None
             fills = None
-            for j in range(60,80):
+            for j in range(0,100):
                 raw = pd.read_csv(f"res/rate/raw-{gap_size}-{j}.csv",index_col="jd",parse_dates=True)
                 gap = pd.read_csv(f"res/rate/gap-{gap_size}-{j}.csv",index_col="jd",parse_dates=True)
                 # find cidx and ridx
@@ -59,21 +59,7 @@ if __name__ == '__main__':
                     fills = np.concatenate([filldata.iloc[r_idx,c_idx].to_numpy(), fills])
             raw_s = raw_s.reshape(-1)
             fills = fills.reshape(-1)
-            sns.regplot(raw_s.reshape(-1), fills.reshape(-1),ax=subs[k][i],color='steelblue',scatter_kws={'s':2},line_kws={"linewidth":1})
-            var = stats.pearsonr(raw_s, fills)[0]
-            if k == 3:
-                subs[k][i].set_xlabel(filler.fname, fontsize=12)
-            if i == 0:
-                subs[k][i].set_ylabel(f"{int(gap_size*100)}%",fontsize=12)
-            subs[k][i].text(0.2, 0.8,f'r:{var:.2f}',
-            horizontalalignment='center',
-            verticalalignment='center',
-            transform = subs[k][i].transAxes,
-            bbox=dict(boxstyle="round",ec=(1., 0.5, 0.5),fc=(1., 0.8, 0.8),))
-            r = pearsonr(raw_s, fills)
-            print(filler.name, r[0])
+            print(filler.name, np.abs(raw_s-fills).mean()*60)
 
 
-    # subs[-1,-1].axis("off")
-    plt.savefig(f"fig/rate-rp.png")
             
