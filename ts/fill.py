@@ -385,7 +385,7 @@ class MissForestFiller(Filler):
         from missingpy import MissForest
         tsc = ts.complete()
         if not oob:
-            tc = MissForest().fit_transform(tsc)
+            tc = MissForest(decreasing=True, max_iter=5, n_estimators=50).fit_transform(tsc)
             return type(ts)(datas = tc, indexs=tsc.index, columns=tsc.columns)
         else:
             tc, oobs, oobp = MissForest(oob_score=oob).fit_transform(tsc) 

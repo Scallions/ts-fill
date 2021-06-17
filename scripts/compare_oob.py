@@ -168,7 +168,7 @@ if __name__ == "__main__":
     # 点的大小
     pltsize = 2
 
-    gap_size = 2
+    gap_size = 180
     ltss = []
     while len(ltss) == 0:
         tss = load_data2(lengths=20, length=200)

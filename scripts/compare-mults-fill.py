@@ -64,13 +64,20 @@ if __name__ == '__main__':
 
     # 定义比较的 gap size
     gap_sizes = [
-        2, 
+        # 2, 
         # 5, 
         7,
         # 20,
-        30,
-        180
+        # 30,
+        # 180
         ]
+
+    gap_rates = [
+        # 0.1,
+        # 0.2,
+        0.3,
+        # 0.4
+    ]
 
     # 定义比较的filler 种类
     fillers = [
@@ -124,9 +131,10 @@ if __name__ == '__main__':
         index=gap_sizes + ['time', 'gap_count', 'count']
         )
     result.loc['time'] = 0
-    for gap_size in gap_sizes:
-        val_tss = [(ts, *ts.make_gap(gap_size, cache_size=30, cper=0.5, c_i
+    for gap_rate in gap_rates:
+        val_tss = [(ts, *ts.make_gap(2, cache_size=30, per=gap_rate, cper=0.5, c_i
             =True)) for ts in tsls]
+        val_tss = val_tss[:2]
         for i, filler in enumerate(fillers):
             res = None
             start = time.time()
@@ -156,12 +164,13 @@ if __name__ == '__main__':
             means = res.loc['mean'].values
             res_mean = sum(counts * means) / sum(counts)
             end = time.time()
-            result.loc[gap_size, filler.name] = res_mean
+            result.loc[gap_rate, filler.name] = res_mean
             result.loc['time', filler.name] = end - start + result.loc[
                 'time', filler.name]
             result.loc['count', filler.name] = count
             result.loc['gap_count', filler.name] = gap_count
             logger.info(
-                f'{filler.name} mean: {res_mean} time: {end - start:0.4f} gap: {gap_size}'
+                f'{filler.name} mean: {res_mean} time: {end - start:0.4f} gap: {gap_rate}'
                 )
+        break
     result.to_csv('res/fill_mul_gapsize_an.csv')

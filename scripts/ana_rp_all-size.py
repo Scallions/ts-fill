@@ -64,7 +64,10 @@ if __name__ == '__main__':
             if k == 3:
                 subs[k][i].set_xlabel(filler.fname, fontsize=12)
             if i == 0:
-                subs[k][i].set_ylabel(f"{gap_size}",fontsize=12)
+                if gap_size == 7:
+                    subs[k][i].set_ylabel(f"20 by {gap_size}-day",fontsize=12)
+                else:
+                    subs[k][i].set_ylabel(f"{180//gap_size} by {gap_size}-day",fontsize=12)
             subs[k][i].text(0.2, 0.8,f'r:{var:.2f}',
             horizontalalignment='center',
             verticalalignment='center',
